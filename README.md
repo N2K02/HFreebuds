@@ -33,7 +33,7 @@ Laid out like the official app, in Material 3 Expressive: a home screen with **S
 Each model has a profile of what it supports. Every section also only appears when the earbuds actually answer, so unlisted Huawei / Honor earbuds get whatever they support.
 
 - **HUAWEI FreeBuds 5**: battery, noise control (Smart / Light / Balanced), equalizer, HD audio, low latency and wear detection match packets captured from the official app. Gestures, dual connection and language use the protocol shared by the other models and are marked "not tested on this model yet" in the app.
-- FreeBuds 5i, 6i, 4i, 3, Pro, Pro 2, Pro 3, Pro 4, Pro 5, SE, SE 2, SE 4 ANC, FreeClip, FreeClip 2, FreeBuds Studio, FreeLace Pro, FreeLace Pro 2, Honor Earbuds 2.
+- FreeBuds 5i, 6i, 4i, 3, Pro, Pro 2, Pro 3, Pro 4, Pro 5, SE, SE 2, SE 3, SE 4 ANC, FreeClip, FreeClip 2, FreeBuds Studio, FreeLace Pro, FreeLace Pro 2, Honor Earbuds 2.
 
 ### What Android doesn't allow
 
@@ -63,7 +63,7 @@ HFreebuds' code is written from scratch in Kotlin; no code is copied from them.
 The app updates itself from this repo's Releases:
 
 - When you open it (at most every 12 hours) it checks for a newer release. If there is one, a card shows **what's new** with **Update now**, **Later** or **Skip this version**.
-- The footer at the bottom shows the version and **Check for updates**; it slides away while you scroll down.
+- The **Updates** screen shows the version and **Check for updates**.
 - The APK is downloaded inside the app, checked (size, SHA-256 checksum from GitHub, same app, newer version, same signing key) and opened in Android's installer.
 
 ## Signing

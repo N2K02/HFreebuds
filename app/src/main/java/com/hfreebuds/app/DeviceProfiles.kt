@@ -116,6 +116,8 @@ data class DeviceProfile(
                 "HUAWEI FreeBuds SE 2", listOf("freebudsse2"), lowLatency = true, eqPresets = presets4,
                 doubleTap = true, doubleTapInCall = true, tripleTap = true, longTap = true, longTapAnc = false,
             ),
+            // SE 3: no captures yet, so ask for everything and show only what it answers.
+            generic("HUAWEI FreeBuds SE 3").copy(keys = listOf("freebudsse3")),
             DeviceProfile(
                 "HUAWEI FreeBuds SE 4 ANC", listOf("freebudsse4"), anc = true, awareness = true, cancelLevels = levels4,
                 lowLatency = true, eqPresets = presets4, doubleTap = true, doubleTapInCall = true, tripleTap = true,

@@ -169,7 +169,6 @@ private fun HomePage(
                 scrollBehavior = scroll,
             )
         },
-        bottomBar = { UpdateFooterBar("HFreebuds") },
     ) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(

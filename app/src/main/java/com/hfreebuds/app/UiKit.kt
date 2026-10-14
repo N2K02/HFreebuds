@@ -230,13 +230,15 @@ fun Tile(title: String, icon: ImageVector, modifier: Modifier = Modifier, subtit
         shape = RoundedCornerShape(28.dp),
         modifier = modifier.clip(RoundedCornerShape(28.dp)).clickable(role = Role.Button, onClick = onClick),
     ) {
-        Column(Modifier.padding(18.dp).heightIn(min = 76.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            IconBadge(icon)
-            Spacer(Modifier.height(10.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 2)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 18.dp, end = 12.dp, top = 12.dp, bottom = 12.dp).heightIn(min = 40.dp),
+        ) {
+            Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 subtitle?.let { Note(it) }
             }
+            IconBadge(icon, size = 36)
         }
     }
 }

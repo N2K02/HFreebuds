@@ -106,7 +106,12 @@ class FrameReader {
             val len = (buf[1].u8() shl 8) or buf[2].u8()
             val total = len + 5
             if (len < 3 || len > 4096) { buf = buf.copyOfRange(1, buf.size); continue }
-            if (buf.size < total) break
+            if (buf.size < total) {
+                // Maybe this 5A was a stray byte: skip to a later complete, valid frame if there is one.
+                val next = (1 until buf.size).firstOrNull { j -> buf[j] == 0x5A.toByte() && validAt(j) }
+                if (next != null) { buf = buf.copyOfRange(next, buf.size); continue }
+                break
+            }
             val frame = buf.copyOfRange(0, total)
             val crc = (frame[total - 2].u8() shl 8) or frame[total - 1].u8()
             if (HuaweiPacket.crc16(frame.copyOfRange(0, total - 2)) == crc) {
@@ -117,6 +122,15 @@ class FrameReader {
             }
         }
         return out
+    }
+
+    private fun validAt(j: Int): Boolean {
+        if (j + 4 > buf.size) return false
+        val len = (buf[j + 1].u8() shl 8) or buf[j + 2].u8()
+        val total = len + 5
+        if (len < 3 || len > 4096 || j + total > buf.size) return false
+        val crc = (buf[j + total - 2].u8() shl 8) or buf[j + total - 1].u8()
+        return HuaweiPacket.crc16(buf.copyOfRange(j, j + total - 2)) == crc
     }
 }
 

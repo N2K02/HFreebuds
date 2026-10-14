@@ -41,7 +41,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.NoiseAware
 import androidx.compose.material.icons.rounded.NoiseControlOff
-import androidx.compose.material.icons.rounded.NoiseControlOn
+import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Subject
 import androidx.compose.material.icons.rounded.SwapHoriz
@@ -331,7 +331,7 @@ private fun NoiseCard(s: EarbudsState) {
     val p = s.profile ?: return
     val modes = buildList {
         add(Triple(0, "Off", Icons.Rounded.NoiseControlOff))
-        add(Triple(1, "Noise canceling", Icons.Rounded.NoiseControlOn))
+        add(Triple(1, "Noise canceling", Icons.Rounded.VolumeOff))
         if (p.awareness || s.ancMode == 2) add(Triple(2, "Awareness", Icons.Rounded.NoiseAware))
     }
     Surface(

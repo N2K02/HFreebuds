@@ -234,7 +234,8 @@ fun SoundEffectsPage(onBack: () -> Unit) {
             return@PageScaffold
         }
         item { GroupLabel("Official preset EQ profiles") }
-        val presets = p.eqPresets.filter { s.eqAvailable == null || it.value in s.eqAvailable }.ifEmpty { p.eqPresets }
+        val available = s.eqAvailable
+        val presets = p.eqPresets.filter { available == null || it.value in available }.ifEmpty { p.eqPresets }
         presets.forEachIndexed { i, o ->
             item {
                 RadioItem(i, presets.size, o.label, presetBlurbs[o.label], s.eqPreset == o.value) { Earbuds.setEq(o.value) }

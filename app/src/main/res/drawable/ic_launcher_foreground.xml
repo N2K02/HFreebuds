@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Two earbuds with a sound wave between them -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- left bud -->
+    <path
+        android:fillColor="#E8F0FF"
+        android:pathData="M38,36a9,9 0 1,1 0,18a9,9 0 1,1 0,-18zM34.5,50h7v20a3.5,3.5 0 0,1 -7,0z" />
+    <!-- right bud -->
+    <path
+        android:fillColor="#E8F0FF"
+        android:pathData="M70,36a9,9 0 1,1 0,18a9,9 0 1,1 0,-18zM66.5,50h7v20a3.5,3.5 0 0,1 -7,0z" />
+    <!-- sound wave -->
+    <path
+        android:pathData="M50,48v12M54,44v20M58,48v12"
+        android:strokeWidth="3"
+        android:strokeColor="#7CB3FF"
+        android:strokeLineCap="round" />
+</vector>

@@ -81,7 +81,7 @@ data class DeviceProfile(
                 language = true, dualConnect = true, dualAutoConnect = false,
             ),
             DeviceProfile(
-                "HUAWEI FreeBuds 4i", listOf("freebuds4i", "honorearbuds2"), anc = true, awareness = true,
+                "HUAWEI FreeBuds 4i", listOf("freebuds4i", "honorearbuds2", "honorearbuds2se", "honorearbuds2lite"), anc = true, awareness = true,
                 inEar = true, autoPause = true, doubleTap = true, longTap = true, language = true,
             ),
             DeviceProfile(
@@ -116,6 +116,7 @@ data class DeviceProfile(
                 "HUAWEI FreeBuds SE 2", listOf("freebudsse2"), lowLatency = true, eqPresets = presets4,
                 doubleTap = true, doubleTapInCall = true, tripleTap = true, longTap = true, longTapAnc = false,
             ),
+            generic("HUAWEI FreeBuds 4").copy(keys = listOf("freebuds4")),
             // SE 3: no captures yet, so ask for everything and show only what it answers.
             generic("HUAWEI FreeBuds SE 3").copy(keys = listOf("freebudsse3")),
             DeviceProfile(

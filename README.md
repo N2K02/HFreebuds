@@ -33,7 +33,7 @@ Laid out like the official app, in Material 3 Expressive: a home screen with **S
 Each model has a profile of what it supports. Every section also only appears when the earbuds actually answer, so unlisted Huawei / Honor earbuds get whatever they support.
 
 - **HUAWEI FreeBuds 5**: battery, noise control (Smart / Light / Balanced), equalizer, HD audio, low latency and wear detection match packets captured from the official app. Gestures, dual connection and language use the protocol shared by the other models and are marked "not tested on this model yet" in the app.
-- FreeBuds 5i, 6i, 4i, 3, Pro, Pro 2, Pro 3, Pro 4, Pro 5, SE, SE 2, SE 3, SE 4 ANC, FreeClip, FreeClip 2, FreeBuds Studio, FreeLace Pro, FreeLace Pro 2, Honor Earbuds 2.
+- FreeBuds 5i, 6i, 4i, 3, Pro, Pro 2, Pro 3, Pro 4, Pro 5, SE, SE 2, SE 3, SE 4 ANC, FreeClip, FreeClip 2, FreeBuds Studio, FreeLace Pro, FreeLace Pro 2, Honor Earbuds 2 / 2 SE / 2 Lite, FreeBuds 4.
 
 ### What Android doesn't allow
 

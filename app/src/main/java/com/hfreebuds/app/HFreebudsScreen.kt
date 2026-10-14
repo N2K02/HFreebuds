@@ -1,6 +1,14 @@
 package com.hfreebuds.app
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Smartphone
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import android.bluetooth.BluetoothManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -191,6 +199,7 @@ private fun HomePage(
             }
 
             item { Hero(s, onChoose = onChoose, onRetry = { savedAddress()?.let(onPick) }) }
+            if (connected) item { PhoneCard(s) }
 
             if (connected) {
                 // ---- SOUND
@@ -324,7 +333,19 @@ private fun BatteryDial(label: String, level: Int?, charging: Boolean) {
 
 // ============================================================ noise control
 
-@OptIn(ExperimentalLayoutApi::class)
+private val modeBlurbs = mapOf(
+    "Dynamic" to "Automatically adjust noise canceling based on your surroundings.",
+    "Cozy" to "Ideal for places with a little noise.",
+    "General" to "Ideal for noisy places.",
+    "Smart" to "Automatically adjust noise canceling based on your surroundings.",
+    "Light" to "Ideal for places with a little noise.",
+    "Balanced" to "A balance of noise canceling and natural sound.",
+    "Deep" to "Strongest noise canceling, for the noisiest places.",
+    "Normal" to "Hear your surroundings as they are.",
+    "Voice boost" to "Makes voices easier to hear.",
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NoiseCard(s: EarbudsState) {
     val p = s.profile ?: return
@@ -333,66 +354,139 @@ private fun NoiseCard(s: EarbudsState) {
         add(Triple(1, "Noise canceling", Icons.Rounded.VolumeOff))
         if (p.awareness || s.ancMode == 2) add(Triple(2, "Awareness", Icons.Rounded.NoiseAware))
     }
+    val levels = when (s.ancMode) {
+        1 -> p.cancelLevels
+        2 -> p.awarenessLevels
+        else -> emptyList()
+    }
+    val levelLabel = levels.firstOrNull { it.value == s.ancLevel }?.label
+    var sheet by remember { mutableStateOf(false) }
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("Noise control", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .then(if (levels.isNotEmpty()) Modifier.clickable(role = Role.Button) { sheet = true } else Modifier)
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    "Noise control", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
+                if (levels.isNotEmpty()) {
+                    levelLabel?.let {
+                        Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Rounded.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 modes.forEach { (mode, label, icon) ->
                     val selected = s.ancMode == mode
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .clickable(role = Role.RadioButton) { Earbuds.setAnc(mode) }
-                            .padding(8.dp),
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(64.dp)
-                                .clip(if (selected) CircleShape else RoundedCornerShape(22.dp))
+                                .size(46.dp)
+                                .clip(if (selected) CircleShape else RoundedCornerShape(16.dp))
                                 .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest),
                         ) {
                             Icon(
-                                icon, label,
+                                icon, label, Modifier.size(24.dp),
                                 tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Text(
-                            label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center,
+                            label, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
                             color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(top = 6.dp),
+                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
                 }
             }
-            val levels = when (s.ancMode) {
-                1 -> p.cancelLevels
-                2 -> p.awarenessLevels
-                else -> emptyList()
-            }
-            AnimatedVisibility(levels.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(if (s.ancMode == 1) "Strength" else "Awareness", style = MaterialTheme.typography.labelLarge)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        levels.forEach { o ->
-                            FilterChip(
-                                selected = s.ancLevel == o.value,
-                                onClick = { Earbuds.setAnc(s.ancMode ?: 1, o.value) },
-                                label = { Text(o.label) },
-                            )
-                        }
-                    }
-                    if (s.ancMode == 1 && levels.any { it.label == "Smart" }) {
-                        Note("Smart adjusts the strength to the noise around you.")
+        }
+    }
+    if (sheet && levels.isNotEmpty()) {
+        ModalBottomSheet(
+            onDismissRequest = { sheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) {
+            Column(Modifier.padding(horizontal = 16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 8.dp, bottom = 10.dp)) {
+                    Text(
+                        "Select mode", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    IconButton(onClick = { sheet = false }) { Icon(Icons.Rounded.Close, "Close") }
+                }
+                levels.forEachIndexed { i, o ->
+                    RadioItem(i, levels.size, o.label, modeBlurbs[o.label], s.ancLevel == o.value) {
+                        Earbuds.setAnc(s.ancMode ?: 1, o.value)
+                        sheet = false
                     }
                 }
+                Spacer(Modifier.height(16.dp))
             }
         }
+    }
+}
+
+// ============================================================ this phone (tap to disconnect)
+
+@Composable
+private fun PhoneCard(s: EarbudsState) {
+    var ask by remember { mutableStateOf(false) }
+    val phone = Build.MODEL
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(28.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(start = 20.dp, end = 14.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(phone, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Bluetooth, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("  This phone", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable(role = Role.Button) { ask = true },
+            ) { Icon(Icons.Rounded.Smartphone, "Disconnect", tint = MaterialTheme.colorScheme.onPrimary) }
+        }
+    }
+    if (ask) {
+        AlertDialog(
+            onDismissRequest = { ask = false },
+            title = { Text("Disconnect?") },
+            text = { Text("\u201C$phone\u201D will be disconnected.") },
+            dismissButton = { TextButton(onClick = { ask = false }) { Text("Cancel") } },
+            confirmButton = {
+                TextButton(onClick = {
+                    ask = false
+                    // With Multi connect the earbuds list this phone: ask them to drop it. Otherwise close the app's link.
+                    val me = s.dualDevices?.firstOrNull { it.connected && it.name.equals(phone, ignoreCase = true) }
+                    if (me != null) Earbuds.dualCommand(2, me.mac) else Earbuds.disconnect()
+                }) { Text("Disconnect", color = MaterialTheme.colorScheme.error) }
+            },
+        )
     }
 }
 

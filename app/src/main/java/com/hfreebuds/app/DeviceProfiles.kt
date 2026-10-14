@@ -53,7 +53,7 @@ data class DeviceProfile(
             keys = listOf("freebuds5"),
             anc = true,
             // FreeBuds 5 (open-fit): Smart, Light and Balanced; no Deep, no awareness mode.
-            cancelLevels = listOf(Option(3, "Smart"), Option(1, "Light"), Option(0, "Balanced")),
+            cancelLevels = listOf(Option(3, "Dynamic"), Option(1, "Cozy"), Option(0, "General")),
             inEar = true, autoPause = true, quality = true, lowLatency = true,
             eqPresets = presets4,
             doubleTap = true, doubleTapInCall = true, longTap = true, longTapRight = true, swipe = true,

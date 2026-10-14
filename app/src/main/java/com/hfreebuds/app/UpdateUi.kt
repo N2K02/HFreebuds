@@ -253,7 +253,7 @@ fun UpdateFooterBar(appName: String, modifier: Modifier = Modifier) {
                         onClick = { AppUpdater.check(manual = true) }, contentPadding = small, modifier = buttonModifier,
                     ) {
                         androidx.compose.material3.Icon(
-                            androidx.compose.material.icons.Icons.Rounded.CheckCircle, null,
+                            androidx.compose.material.icons.Icons.Rounded.Check, null,
                             Modifier.size(16.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50),
                         )
                         Text("  Up to date", style = MaterialTheme.typography.labelMedium)

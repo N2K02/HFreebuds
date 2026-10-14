@@ -30,7 +30,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -702,7 +702,7 @@ fun UpdatesPage(onBack: () -> Unit) {
                 )
                 FilledTonalButton(onClick = { AppUpdater.check(manual = true) }) {
                     if (state is AppUpdater.State.UpToDate) {
-                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50))
+                        Icon(Icons.Rounded.Check, null, Modifier.size(18.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50))
                         Text("  Up to date")
                     } else Text("Check for updates")
                 }

@@ -48,6 +48,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.graphics:graphics-shapes:1.0.1")
     implementation("androidx.activity:activity-compose:1.11.0")
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:4.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     testImplementation("junit:junit:4.13.2")

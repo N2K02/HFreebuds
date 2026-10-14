@@ -30,6 +30,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -563,13 +564,26 @@ fun DualPage(onBack: () -> Unit) {
 fun LanguagePage(onBack: () -> Unit) {
     val s by Earbuds.state.collectAsState()
     val languages = s.languages.orEmpty()
-    var chosen by rememberSaveable { mutableIntStateOf(-1) }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("hfreebuds", Context.MODE_PRIVATE) }
+    val key = "language_${s.address}"
+    var saved by remember(s.address) { mutableStateOf(prefs.getString(key, null)) }
+    // The earbuds don't report their language: show the one picked here, English until then.
+    val english = languages.firstOrNull { it.equals("en-GB", true) || it.equals("en-US", true) }
+        ?: languages.firstOrNull { it.startsWith("en", true) }
+    val current = saved?.takeIf { it in languages } ?: english
     PageScaffold("Voice prompts language", onBack) {
         if (languages.isEmpty()) item { Panel { Text("These earbuds didn't report any languages.") } }
         languages.forEachIndexed { i, l ->
-            item { RadioItem(i, languages.size, l, null, chosen == i) { chosen = i; Earbuds.setLanguage(l) } }
+            item {
+                RadioItem(i, languages.size, l, null, current == l) {
+                    saved = l
+                    prefs.edit().putString(key, l).apply()
+                    Earbuds.setLanguage(l)
+                }
+            }
         }
-        item { Note("The earbuds don't report which language is active; choose one to change it.", Modifier.padding(horizontal = 12.dp)) }
+        item { Note("English is shown until you choose another. The earbuds don't report which language is active.", Modifier.padding(horizontal = 12.dp)) }
     }
 }
 
@@ -599,12 +613,12 @@ fun PhoneAudioPage(onBack: () -> Unit) {
                     Text("${c.codec}" + if (details.isEmpty()) "" else " · " + details.joinToString(" · "), style = MaterialTheme.typography.bodyLarge)
                     c.ldacMode?.let { Note("LDAC: $it") }
                 } else if (loaded) {
-                    Note("Codec unknown: play something on the earbuds, then refresh.")
+                    Note("Codec unknown (${PhoneCodec.lastError ?: "no reason"}). Play something on the earbuds, then refresh.")
                 }
                 Note("Android lets only the system change the codec. Turn on \"Prioritize sound quality\" in Earbud settings, then pick the codec and LDAC quality in Developer options → Bluetooth audio.")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilledTonalButton(onClick = { open(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS) }) { Text("Codec settings") }
-                    FilledTonalButton(onClick = { open(Settings.ACTION_BLUETOOTH_SETTINGS) }) { Text("Bluetooth") }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilledTonalButton(onClick = { open(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS) }, modifier = Modifier.weight(1f)) { Text("Codec settings", maxLines = 1) }
+                    FilledTonalButton(onClick = { open(Settings.ACTION_BLUETOOTH_SETTINGS) }, modifier = Modifier.weight(1f)) { Text("Bluetooth", maxLines = 1) }
                 }
             }
         }
@@ -612,10 +626,17 @@ fun PhoneAudioPage(onBack: () -> Unit) {
             Panel {
                 Text("Left / right balance", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Note("Android sets the balance in Accessibility → Audio adjustment. Use the test tones to check it.")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilledTonalButton(onClick = { open(Settings.ACTION_ACCESSIBILITY_SETTINGS) }) { Text("Balance settings") }
-                    OutlinedButton(onClick = { FindTone.play(context, FindTone.Side.LEFT, seconds = 2, rising = false) }) { Text("Test left") }
-                    OutlinedButton(onClick = { FindTone.play(context, FindTone.Side.RIGHT, seconds = 2, rising = false) }) { Text("Test right") }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val pad = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp)
+                    FilledTonalButton(onClick = { open(Settings.ACTION_ACCESSIBILITY_SETTINGS) }, contentPadding = pad, modifier = Modifier.weight(1f)) {
+                        Text("Settings", maxLines = 1)
+                    }
+                    OutlinedButton(onClick = { FindTone.play(context, FindTone.Side.LEFT, seconds = 2, rising = false) }, contentPadding = pad, modifier = Modifier.weight(1f)) {
+                        Text("Test left", maxLines = 1)
+                    }
+                    OutlinedButton(onClick = { FindTone.play(context, FindTone.Side.RIGHT, seconds = 2, rising = false) }, contentPadding = pad, modifier = Modifier.weight(1f)) {
+                        Text("Test right", maxLines = 1)
+                    }
                 }
             }
         }
@@ -679,7 +700,12 @@ fun UpdatesPage(onBack: () -> Unit) {
                         else -> "Updates come from this app's GitHub releases and install through Android's installer."
                     },
                 )
-                FilledTonalButton(onClick = { AppUpdater.check(manual = true) }) { Text("Check for updates") }
+                FilledTonalButton(onClick = { AppUpdater.check(manual = true) }) {
+                    if (state is AppUpdater.State.UpToDate) {
+                        Icon(Icons.Rounded.CheckCircle, null, Modifier.size(18.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50))
+                        Text("  Up to date")
+                    } else Text("Check for updates")
+                }
             }
         }
         item {

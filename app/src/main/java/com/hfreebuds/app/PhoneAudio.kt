@@ -99,13 +99,25 @@ object FindTone {
 data class CodecInfo(val codec: String, val sampleRate: String?, val bits: String?, val ldacMode: String?)
 
 object PhoneCodec {
+    /** Why the last read gave nothing, shown in the app. */
+    @Volatile var lastError: String? = null
+
+    private var exempted = false
+    private fun allowBluetoothReflection() {
+        if (exempted) return
+        exempted = true
+        runCatching { org.lsposed.hiddenapibypass.HiddenApiBypass.addHiddenApiExemptions("Landroid/bluetooth/") }
+    }
+
     /**
      * Reads the active A2DP codec. Android lets apps read it but only system apps change it,
      * so changing goes through Developer options. Never throws; null if unknown.
      */
     @SuppressLint("MissingPermission")
     suspend fun read(context: Context, address: String?): CodecInfo? {
-        val bm = context.getSystemService(BluetoothManager::class.java) ?: return null
+        lastError = null
+        allowBluetoothReflection()
+        val bm = context.getSystemService(BluetoothManager::class.java) ?: run { lastError = "no Bluetooth"; return null }
         val a2dp = suspendCancellableCoroutine<BluetoothA2dp?> { cont ->
             val ok = bm.adapter.getProfileProxy(context, object : BluetoothProfile.ServiceListener {
                 override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
@@ -119,9 +131,11 @@ object PhoneCodec {
         } ?: return null
         return try {
             val device: BluetoothDevice = a2dp.connectedDevices.firstOrNull { address == null || it.address == address }
-                ?: return null
-            val status = a2dp.javaClass.getMethod("getCodecStatus", BluetoothDevice::class.java).invoke(a2dp, device) ?: return null
-            val config = status.javaClass.getMethod("getCodecConfig").invoke(status) ?: return null
+                ?: run { lastError = "earbuds not connected for audio"; return null }
+            val status = a2dp.javaClass.getMethod("getCodecStatus", BluetoothDevice::class.java).invoke(a2dp, device)
+                ?: run { lastError = "Android returned no codec status"; return null }
+            val config = status.javaClass.getMethod("getCodecConfig").invoke(status)
+                ?: run { lastError = "no codec config"; return null }
             fun int(m: String) = runCatching { config.javaClass.getMethod(m).invoke(config) as Number }.getOrNull()
             val type = int("getCodecType")?.toInt()
             val codec = when (type) {
@@ -143,7 +157,8 @@ object PhoneCodec {
                 else -> null
             } else null
             CodecInfo(codec, rate, bits, ldac)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            lastError = (e.cause ?: e).let { it.javaClass.simpleName + (it.message?.let { m -> ": " + m.take(60) } ?: "") }
             null
         } finally {
             runCatching { bm.adapter.closeProfileProxy(BluetoothProfile.A2DP, a2dp) }

@@ -6,6 +6,10 @@ Control your **HUAWEI FreeBuds** from any Android phone, without HUAWEI AI Life.
 
 **[⬇ Download the latest APK](https://github.com/N2K02/HFreebuds/releases/latest)** · Android 12 or newer · Material 3 Expressive (your wallpaper colours, light/dark)
 
+## Layout
+
+Laid out like the official app, in Material 3 Expressive: a home screen with **Sound** (noise control, sound effects), **Interactions** (gesture control with Double-tap / Triple-tap / Press & hold / Swipe tabs), **Ear fit** (wear detection) and **More** (Find Device, Earbud settings, Voice prompts, Phone audio, Updates, About, Connection log). Each opens its own screen.
+
 ## Features
 
 | | |

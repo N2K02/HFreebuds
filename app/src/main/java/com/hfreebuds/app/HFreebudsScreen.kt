@@ -2,65 +2,60 @@ package com.hfreebuds.app
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Intent
-import android.provider.Settings
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.BluetoothSearching
 import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Devices
-import androidx.compose.material.icons.rounded.Equalizer
-import androidx.compose.material.icons.rounded.ExpandLess
-import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Hearing
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.LocationOn
+import androidx.compose.material.icons.rounded.NoiseAware
+import androidx.compose.material.icons.rounded.NoiseControlOff
+import androidx.compose.material.icons.rounded.NoiseControlOn
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material.icons.rounded.Subject
 import androidx.compose.material.icons.rounded.SwapHoriz
-import androidx.compose.material.icons.rounded.TouchApp
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -68,39 +63,35 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+private enum class Page {
+    HOME, GESTURES, SOUND, WEAR, SETTINGS, FIND, DUAL, LANGUAGE, PHONE, ABOUT, UPDATES, LOG
+}
+
 @Composable
 fun HFreebudsScreen(
     hasPermission: Boolean,
@@ -108,26 +99,74 @@ fun HFreebudsScreen(
     savedAddress: () -> String?,
     onPick: (String) -> Unit,
 ) {
-    val s by Earbuds.state.collectAsState()
+    var page by rememberSaveable { mutableStateOf(Page.HOME) }
     var picking by remember { mutableStateOf(false) }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    BackHandler(enabled = page != Page.HOME) { page = if (page == Page.DUAL) Page.SETTINGS else Page.HOME }
+    val back = { page = if (page == Page.DUAL) Page.SETTINGS else Page.HOME }
+
+    AnimatedContent(
+        targetState = page,
+        transitionSpec = {
+            if (targetState == Page.HOME) {
+                (slideInHorizontally { -it / 5 } + fadeIn()) togetherWith (slideOutHorizontally { it / 3 } + fadeOut())
+            } else {
+                (slideInHorizontally { it / 3 } + fadeIn()) togetherWith (slideOutHorizontally { -it / 5 } + fadeOut())
+            }
+        },
+        label = "page",
+    ) { p ->
+        when (p) {
+            Page.HOME -> HomePage(
+                hasPermission, onAskPermission, savedAddress, onPick,
+                onChoose = { picking = true }, open = { page = it },
+            )
+            Page.GESTURES -> GesturesPage(back)
+            Page.SOUND -> SoundEffectsPage(back)
+            Page.WEAR -> WearPage(back)
+            Page.SETTINGS -> EarbudSettingsPage(back, openDual = { page = Page.DUAL })
+            Page.FIND -> FindPage(back)
+            Page.DUAL -> DualPage(back)
+            Page.LANGUAGE -> LanguagePage(back)
+            Page.PHONE -> PhoneAudioPage(back)
+            Page.ABOUT -> AboutPage(back)
+            Page.UPDATES -> UpdatesPage(back)
+            Page.LOG -> LogPage(back)
+        }
+    }
+
+    if (picking) DevicePicker(onDismiss = { picking = false }, onPick = { picking = false; onPick(it) })
+}
+
+// ============================================================ home
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun HomePage(
+    hasPermission: Boolean,
+    onAskPermission: () -> Unit,
+    savedAddress: () -> String?,
+    onPick: (String) -> Unit,
+    onChoose: () -> Unit,
+    open: (Page) -> Unit,
+) {
+    val s by Earbuds.state.collectAsState()
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val connected = s.link == Link.CONNECTED
 
     Scaffold(
-        modifier = Modifier.nestedScroll(FooterScroll.connection).nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(FooterScroll.connection).nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = {
                     Text(
-                        s.deviceName ?: "HFreebuds",
+                        s.profile?.name ?: s.deviceName ?: "HFreebuds",
                         maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold,
                     )
                 },
                 actions = {
-                    if (hasPermission) {
-                        IconButton(onClick = { picking = true }) { Icon(Icons.Rounded.SwapHoriz, "Choose earbuds") }
-                    }
+                    if (hasPermission) IconButton(onClick = onChoose) { Icon(Icons.Rounded.SwapHoriz, "Choose earbuds") }
                 },
-                scrollBehavior = scrollBehavior,
+                scrollBehavior = scroll,
             )
         },
         bottomBar = { UpdateFooterBar("HFreebuds") },
@@ -138,151 +177,131 @@ fun HFreebudsScreen(
                 top = padding.calculateTopPadding() + 4.dp,
                 bottom = padding.calculateBottomPadding() + 24.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item { UpdateCard() }
             if (!hasPermission) {
                 item {
-                    Section("Allow Bluetooth", Icons.Rounded.Bluetooth) {
+                    Panel {
+                        Text("Allow Bluetooth", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text("HFreebuds talks to your earbuds over Bluetooth. Android calls this permission \"Nearby devices\".")
                         Button(onClick = onAskPermission) { Text("Allow") }
                     }
                 }
                 return@LazyColumn
             }
-            item { ConnectionCard(s, onPick = { picking = true }, onRetry = { savedAddress()?.let(onPick) }) }
-            if (s.link == Link.CONNECTED) {
-                s.battery?.let { b -> item { BatteryCard(b, s.inEar, s.profile?.tws != false) } }
+
+            item { Hero(s, onChoose = onChoose, onRetry = { savedAddress()?.let(onPick) }) }
+
+            if (connected) {
+                // ---- SOUND
+                if (s.ancMode != null || s.eqPreset != null) item { GroupLabel("Sound") }
                 if (s.ancMode != null) item { NoiseCard(s) }
-                if (s.eqPreset != null || s.hdAudio != null || s.lowLatency != null) item { SoundCard(s) }
-                if (s.doubleTap != null || s.tripleTap != null || s.longTap != null || s.swipe != null) item { GesturesCard(s) }
-                if (s.autoPause != null) item { WearCard(s) }
-                if (s.dualEnabled != null) item { DualCard(s) }
-                s.languages?.let { item { LanguageCard(it) } }
+                if (s.eqPreset != null) {
+                    val label = s.profile?.eqPresets?.firstOrNull { it.value == s.eqPreset }?.label
+                    item { NavRow(0, 1, "Sound effects", label, icon = Icons.Rounded.GraphicEq) { open(Page.SOUND) } }
+                }
+                // ---- INTERACTIONS
+                if (s.doubleTap != null || s.tripleTap != null || s.longTap != null || s.swipe != null) {
+                    item { GroupLabel("Interactions") }
+                    item { NavRow(0, 1, "Gesture control", icon = Icons.Rounded.TouchApp) { open(Page.GESTURES) } }
+                }
+                // ---- EAR FIT
+                if (s.autoPause != null) {
+                    item { GroupLabel("Ear fit") }
+                    item {
+                        NavRow(0, 1, "Wear detection", if (s.autoPause == true) "On" else "Off", icon = Icons.Rounded.Hearing) { open(Page.WEAR) }
+                    }
+                }
             }
-            item { FindCard() }
-            item { PhoneAudioCard(s.address) }
-            if (s.info != null) item { InfoCard(s) }
-            item { LogCard() }
-        }
-    }
 
-    if (picking) DevicePicker(onDismiss = { picking = false }, onPick = { picking = false; onPick(it) })
-}
-
-// ---------------------------------------------------------------- building blocks
-
-@Composable
-private fun Section(title: String, icon: ImageVector, action: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-                Text(
-                    title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(start = 12.dp).weight(1f),
-                )
-                action?.invoke()
+            // ---- MORE
+            item { GroupLabel("More") }
+            val tiles = buildList {
+                add(Triple("Find Device", Icons.Rounded.LocationOn, Page.FIND))
+                if (connected && (s.hdAudio != null || s.lowLatency != null || s.dualEnabled != null)) {
+                    add(Triple("Earbud settings", Icons.Rounded.Tune, Page.SETTINGS))
+                }
+                if (connected && s.languages != null) add(Triple("Voice prompts", Icons.Rounded.Language, Page.LANGUAGE))
+                add(Triple("Phone audio", Icons.Rounded.VolumeUp, Page.PHONE))
+                add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
+                add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
+                add(Triple("Connection log", Icons.Rounded.Subject, Page.LOG))
             }
-            content()
-        }
-    }
-}
-
-@Composable
-private fun Note(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-/** "Not tested on this model yet" for features the FreeBuds 5 captures don't cover. */
-@Composable
-private fun Untested(s: EarbudsState, feature: String) {
-    val p = s.profile ?: return
-    if (p.verified.isNotEmpty() && feature !in p.verified) {
-        Note("Not tested on the ${p.name} yet: if a change doesn't stick, the earbuds don't support it.")
-    }
-}
-
-@Composable
-private fun SwitchRow(title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { onChange(!checked) }) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            subtitle?.let { Note(it) }
-        }
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
-}
-
-/** A labelled dropdown: "Left earbud   [Play / pause ▾]". */
-@Composable
-private fun OptionRow(title: String, options: List<Option>, selected: Int?, onSelect: (Int) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Box {
-            OutlinedButton(onClick = { open = true }) {
-                Text(options.firstOrNull { it.value == selected }?.label ?: selected?.let { "Option $it" } ?: "—", maxLines = 1)
-                Icon(Icons.Rounded.ExpandMore, null, Modifier.size(18.dp))
-            }
-            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                options.forEach { o ->
-                    DropdownMenuItem(text = { Text(o.label) }, onClick = { open = false; onSelect(o.value) })
+            tiles.chunked(2).forEach { pair ->
+                item {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        pair.forEach { (title, icon, target) ->
+                            Tile(title, icon, Modifier.weight(1f)) { open(target) }
+                        }
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
+                    }
                 }
             }
         }
     }
 }
 
-// ---------------------------------------------------------------- cards
+// ============================================================ hero (connection + battery)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ConnectionCard(s: EarbudsState, onPick: () -> Unit, onRetry: () -> Unit) {
-    val (title, icon) = when (s.link) {
-        Link.CONNECTED -> "Connected" to Icons.Rounded.Bluetooth
-        Link.CONNECTING -> "Connecting…" to Icons.Rounded.BluetoothSearching
-        Link.FAILED -> "Not connected" to Icons.Rounded.Bluetooth
-        Link.DISCONNECTED -> (if (s.address == null) "Choose your earbuds" else "Disconnected") to Icons.Rounded.Bluetooth
+private fun Hero(s: EarbudsState, onChoose: () -> Unit, onRetry: () -> Unit) {
+    val title = when (s.link) {
+        Link.CONNECTED -> "Connected"
+        Link.CONNECTING -> "Connecting…"
+        Link.FAILED -> "Not connected"
+        Link.DISCONNECTED -> if (s.address == null) "Choose your earbuds" else "Disconnected"
     }
-    Section(title, icon, action = {
-        if (s.link == Link.CONNECTING) LoadingIndicator(Modifier.size(32.dp))
-        else if (s.link == Link.CONNECTED) IconButton(onClick = { Earbuds.refreshAll() }) { Icon(Icons.Rounded.Refresh, "Refresh") }
-    }) {
-        s.profile?.let { p ->
-            Text(p.name, style = MaterialTheme.typography.bodyLarge)
-            if (p.keys.isEmpty()) Note("Model not in the list: HFreebuds shows whatever these earbuds answer to.")
-        }
-        s.error?.takeIf { s.link != Link.CONNECTED }?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        if (s.link != Link.CONNECTED && s.link != Link.CONNECTING) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (s.address != null) Button(onClick = onRetry) { Text("Connect") }
-                FilledTonalButton(onClick = onPick) { Text("Choose earbuds") }
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        shape = RoundedCornerShape(32.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(52.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary),
+                ) {
+                    Icon(
+                        if (s.link == Link.CONNECTING) Icons.Rounded.BluetoothSearching else Icons.Rounded.Headphones, null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+                Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    (s.profile?.name ?: s.deviceName)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                }
+                if (s.link == Link.CONNECTING) LoadingIndicator(Modifier.size(36.dp))
+                else if (s.link == Link.CONNECTED) IconButton(onClick = { Earbuds.refreshAll() }) { Icon(Icons.Rounded.Refresh, "Refresh") }
+            }
+            if (s.link == Link.CONNECTED) {
+                s.battery?.let { b ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        if (s.profile?.tws != false) {
+                            BatteryDial("L", b.left, b.leftCharging)
+                            BatteryDial("R", b.right, b.rightCharging)
+                            BatteryDial("Case", b.case, b.caseCharging)
+                        } else {
+                            BatteryDial("Battery", b.global, b.leftCharging || b.caseCharging)
+                        }
+                    }
+                }
+                s.inEar?.let { Text(if (it) "In your ears" else "Not in your ears", style = MaterialTheme.typography.bodySmall) }
+            }
+            if (s.profile?.keys?.isEmpty() == true) {
+                Text("Model not in the list: HFreebuds shows whatever these earbuds answer to.", style = MaterialTheme.typography.bodySmall)
+            }
+            s.error?.takeIf { s.link != Link.CONNECTED }?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            if (s.link != Link.CONNECTED && s.link != Link.CONNECTING) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (s.address != null) Button(onClick = onRetry) { Text("Connect") }
+                    FilledTonalButton(onClick = onChoose) { Text("Choose earbuds") }
+                }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun BatteryCard(b: Battery, inEar: Boolean?, tws: Boolean) {
-    Section("Battery", Icons.Rounded.Bolt, action = {
-        IconButton(onClick = { Earbuds.refreshBattery() }) { Icon(Icons.Rounded.Refresh, "Refresh battery") }
-    }) {
-        Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-            if (tws) {
-                BatteryDial("Left", b.left, b.leftCharging)
-                BatteryDial("Right", b.right, b.rightCharging)
-                BatteryDial("Case", b.case, b.caseCharging)
-            } else {
-                BatteryDial("Battery", b.global, b.leftCharging || b.caseCharging)
-            }
-        }
-        inEar?.let { Note(if (it) "In your ears" else "Not in your ears") }
     }
 }
 
@@ -290,332 +309,95 @@ private fun BatteryCard(b: Battery, inEar: Boolean?, tws: Boolean) {
 @Composable
 private fun BatteryDial(label: String, level: Int?, charging: Boolean) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(76.dp)) {
-            CircularWavyProgressIndicator(progress = { (level ?: 0) / 100f }, modifier = Modifier.size(76.dp))
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(68.dp)) {
+            CircularWavyProgressIndicator(progress = { (level ?: 0) / 100f }, modifier = Modifier.size(68.dp))
             Text(
                 level?.let { "$it%" } ?: "—",
-                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-            if (charging) Icon(Icons.Rounded.Bolt, "Charging", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+            if (charging) Icon(Icons.Rounded.Bolt, "Charging", Modifier.size(16.dp))
             Text(label, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
+
+// ============================================================ noise control
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun NoiseCard(s: EarbudsState) {
     val p = s.profile ?: return
     val modes = buildList {
-        add(0 to "Off")
-        add(1 to "Noise cancelling")
-        if (p.awareness || s.ancMode == 2) add(2 to "Awareness")
+        add(Triple(0, "Off", Icons.Rounded.NoiseControlOff))
+        add(Triple(1, "Noise canceling", Icons.Rounded.NoiseControlOn))
+        if (p.awareness || s.ancMode == 2) add(Triple(2, "Awareness", Icons.Rounded.NoiseAware))
     }
-    Section("Noise control", Icons.Rounded.Hearing) {
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            modes.forEachIndexed { i, (mode, label) ->
-                SegmentedButton(
-                    selected = s.ancMode == mode,
-                    onClick = { Earbuds.setAnc(mode) },
-                    shape = SegmentedButtonDefaults.itemShape(i, modes.size),
-                ) { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            }
-        }
-        val levels = when (s.ancMode) {
-            1 -> p.cancelLevels
-            2 -> p.awarenessLevels
-            else -> emptyList()
-        }
-        AnimatedVisibility(levels.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(if (s.ancMode == 1) "Strength" else "Awareness", style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    levels.forEach { o ->
-                        FilterChip(
-                            selected = s.ancLevel == o.value,
-                            onClick = { Earbuds.setAnc(s.ancMode ?: 1, o.value) },
-                            label = { Text(o.label) },
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(28.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Text("Noise control", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                modes.forEach { (mode, label, icon) ->
+                    val selected = s.ancMode == mode
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable(role = Role.RadioButton) { Earbuds.setAnc(mode) }
+                            .padding(8.dp),
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(if (selected) CircleShape else RoundedCornerShape(22.dp))
+                                .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest),
+                        ) {
+                            Icon(
+                                icon, label,
+                                tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center,
+                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = 6.dp),
                         )
                     }
                 }
-                if (s.ancMode == 1 && levels.any { it.label == "Smart" }) {
-                    Note("Smart adjusts the strength to the noise around you.")
-                }
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun SoundCard(s: EarbudsState) {
-    val p = s.profile ?: return
-    Section("Sound", Icons.Rounded.Equalizer) {
-        if (s.eqPreset != null) {
-            Text("Equalizer", style = MaterialTheme.typography.labelLarge)
-            val presets = p.eqPresets.filter { s.eqAvailable == null || it.value in s.eqAvailable }.ifEmpty { p.eqPresets }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                presets.forEach { o ->
-                    FilterChip(selected = s.eqPreset == o.value, onClick = { Earbuds.setEq(o.value) }, label = { Text(o.label) })
-                }
+            val levels = when (s.ancMode) {
+                1 -> p.cancelLevels
+                2 -> p.awarenessLevels
+                else -> emptyList()
             }
-            Untested(s, "eq")
-        }
-        s.hdAudio?.let {
-            HorizontalDivider()
-            SwitchRow(
-                "HD audio",
-                "On: best sound quality (uses LDAC when the phone allows it). Off: steadier connection.",
-                it,
-            ) { on -> Earbuds.setHdAudio(on) }
-        }
-        s.lowLatency?.let {
-            HorizontalDivider()
-            SwitchRow("Low latency", "Less audio delay for games and videos. Uses a bit more battery.", it) { on ->
-                Earbuds.setLowLatency(on)
-            }
-        }
-    }
-}
-
-@Composable
-private fun GesturesCard(s: EarbudsState) {
-    val p = s.profile ?: return
-    Section("Gestures", Icons.Rounded.TouchApp) {
-        fun opts(available: List<Int>?): List<Option> {
-            val base = Options.tap
-            if (available == null) return base
-            return base.filter { it.value in available || it.value == -1 } +
-                available.filter { v -> base.none { it.value == v } }.map { Option(it, "Option $it") }
-        }
-        s.doubleTap?.let { g ->
-            Text("Double-tap", style = MaterialTheme.typography.labelLarge)
-            val o = opts(s.doubleTapOptions)
-            if (g.left != null) OptionRow("Left earbud", o, g.left) { Earbuds.setDoubleTap(1, it) }
-            if (g.right != null) OptionRow("Right earbud", o, g.right) { Earbuds.setDoubleTap(2, it) }
-            if (g.inCall != null && p.doubleTapInCall) OptionRow("During calls", Options.tapInCall, g.inCall) { Earbuds.setDoubleTap(4, it) }
-        }
-        s.tripleTap?.let { g ->
-            HorizontalDivider()
-            Text("Triple-tap", style = MaterialTheme.typography.labelLarge)
-            val o = opts(s.tripleTapOptions)
-            if (g.left != null) OptionRow("Left earbud", o, g.left) { Earbuds.setTripleTap(1, it) }
-            if (g.right != null) OptionRow("Right earbud", o, g.right) { Earbuds.setTripleTap(2, it) }
-        }
-        s.longTap?.let { g ->
-            HorizontalDivider()
-            Text("Press and hold", style = MaterialTheme.typography.labelLarge)
-            val o = Options.longTap(p.longTapExtra)
-            if (g.left != null) OptionRow("Left earbud", o, g.left) { Earbuds.setLongTap(1, it) }
-            if (g.right != null && p.longTapRight) OptionRow("Right earbud", o, g.right) { Earbuds.setLongTap(2, it) }
-            s.longTapAnc?.let { a ->
-                Note("When press and hold switches noise control, it cycles through:")
-                if (a.left != null) OptionRow("Left", Options.longTapAnc, a.left) { Earbuds.setLongTapAnc(1, it) }
-                if (a.right != null && p.longTapRight) OptionRow("Right", Options.longTapAnc, a.right) { Earbuds.setLongTapAnc(2, it) }
-            }
-        }
-        s.swipe?.let { v ->
-            HorizontalDivider()
-            OptionRow("Swipe", Options.swipe, v) { Earbuds.setSwipe(it) }
-        }
-        Untested(s, "gestures")
-    }
-}
-
-@Composable
-private fun WearCard(s: EarbudsState) {
-    Section("Wear detection", Icons.Rounded.Tune) {
-        SwitchRow("Pause when taken out", "Pauses music when you take an earbud out, and plays again when you put it back.", s.autoPause == true) {
-            Earbuds.setAutoPause(it)
-        }
-    }
-}
-
-@Composable
-private fun DualCard(s: EarbudsState) {
-    val autoSupported = s.profile?.dualAutoConnect == true
-    Section("Dual-device connection", Icons.Rounded.Devices, action = {
-        Switch(checked = s.dualEnabled == true, onCheckedChange = { Earbuds.setDualEnabled(it) })
-    }) {
-        Note("Stay connected to two phones or computers at once. ★ = preferred device.")
-        if (s.dualEnabled == true) {
-            s.dualDevices.orEmpty().forEach { d ->
-                var menu by remember { mutableStateOf(false) }
-                ListItem(
-                    headlineContent = { Text(d.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    supportingContent = {
-                        Text(
-                            when {
-                                d.playing -> "Connected · playing"
-                                d.connected -> "Connected"
-                                else -> "Not connected"
-                            } + (if (d.autoConnect == true) " · auto-connect" else ""),
-                        )
-                    },
-                    leadingContent = {
-                        IconButton(onClick = { Earbuds.setDualPreferred(d.mac) }) {
-                            Icon(if (d.preferred) Icons.Rounded.Star else Icons.Rounded.StarBorder, "Preferred")
+            AnimatedVisibility(levels.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(if (s.ancMode == 1) "Strength" else "Awareness", style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        levels.forEach { o ->
+                            FilterChip(
+                                selected = s.ancLevel == o.value,
+                                onClick = { Earbuds.setAnc(s.ancMode ?: 1, o.value) },
+                                label = { Text(o.label) },
+                            )
                         }
-                    },
-                    trailingContent = {
-                        Box {
-                            IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.ExpandMore, "More") }
-                            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                DropdownMenuItem(
-                                    text = { Text(if (d.connected) "Disconnect" else "Connect") },
-                                    onClick = { menu = false; Earbuds.dualCommand(if (d.connected) 2 else 1, d.mac) },
-                                )
-                                if (autoSupported) DropdownMenuItem(
-                                    text = { Text(if (d.autoConnect == true) "Turn off auto-connect" else "Turn on auto-connect") },
-                                    onClick = { menu = false; Earbuds.dualCommand(if (d.autoConnect == true) 5 else 4, d.mac) },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Forget this device") },
-                                    onClick = { menu = false; Earbuds.dualCommand(3, d.mac) },
-                                )
-                            }
-                        }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                )
-            }
-        }
-        Untested(s, "dual")
-    }
-}
-
-@Composable
-private fun LanguageCard(languages: List<String>) {
-    Section("Voice prompts language", Icons.Rounded.Language) {
-        val options = languages.mapIndexed { i, l -> Option(i, l) }
-        var chosen by rememberSaveable { mutableIntStateOf(-1) }
-        OptionRow("Language", options, chosen.takeIf { it >= 0 }) { i ->
-            chosen = i
-            Earbuds.setLanguage(languages[i])
-        }
-        Note("The earbuds don't report which language is active; choose one to change it.")
-    }
-}
-
-@Composable
-private fun FindCard() {
-    val context = LocalContext.current
-    val playing by FindTone.playing.collectAsState()
-    Section("Find my earbuds", Icons.Rounded.Search) {
-        Text(
-            "Plays a loud chirp on the earbuds, getting louder. Take them off first. They need to be connected to this phone.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            FindTone.Side.entries.forEach { side ->
-                val label = when (side) { FindTone.Side.LEFT -> "Left"; FindTone.Side.RIGHT -> "Right"; FindTone.Side.BOTH -> "Both" }
-                if (playing == side) {
-                    Button(onClick = { FindTone.stop() }, modifier = Modifier.weight(1f)) { Text("Stop") }
-                } else {
-                    FilledTonalButton(onClick = { FindTone.play(context, side) }, modifier = Modifier.weight(1f)) { Text(label) }
+                    }
+                    if (s.ancMode == 1 && levels.any { it.label == "Smart" }) {
+                        Note("Smart adjusts the strength to the noise around you.")
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun PhoneAudioCard(address: String?) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var codec by remember { mutableStateOf<CodecInfo?>(null) }
-    var loaded by remember { mutableStateOf(false) }
-    suspend fun load() { codec = PhoneCodec.read(context, address); loaded = true }
-    LaunchedEffect(address) { load() }
-    fun open(action: String) = runCatching { context.startActivity(Intent(action)) }
-
-    Section("Phone audio", Icons.Rounded.VolumeUp, action = {
-        IconButton(onClick = { scope.launch { load() } }) { Icon(Icons.Rounded.Refresh, "Refresh") }
-    }) {
-        val c = codec
-        if (c != null) {
-            val details = listOfNotNull(c.sampleRate, c.bits)
-            Text(
-                "Codec: ${c.codec}" + if (details.isEmpty()) "" else " · " + details.joinToString(" · "),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            c.ldacMode?.let { Note("LDAC: $it") }
-        } else if (loaded) {
-            Note("Codec unknown: play something on the earbuds, then refresh.")
-        }
-        Note("Android lets only the system change the codec. Turn on HD audio above, then pick the codec and LDAC quality in Developer options → Bluetooth audio.")
-        FlowRow2 {
-            FilledTonalButton(onClick = { open(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS) }) { Text("Codec settings") }
-            FilledTonalButton(onClick = { open(Settings.ACTION_BLUETOOTH_SETTINGS) }) { Text("Bluetooth") }
-        }
-        HorizontalDivider()
-        Text("Left / right balance", style = MaterialTheme.typography.labelLarge)
-        Note("Android sets the balance in Accessibility → Audio adjustment. Use the test tones to check it.")
-        FlowRow2 {
-            FilledTonalButton(onClick = { open(Settings.ACTION_ACCESSIBILITY_SETTINGS) }) { Text("Balance settings") }
-            OutlinedButton(onClick = { FindTone.play(context, FindTone.Side.LEFT, seconds = 2, rising = false) }) { Text("Test left") }
-            OutlinedButton(onClick = { FindTone.play(context, FindTone.Side.RIGHT, seconds = 2, rising = false) }) { Text("Test right") }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun FlowRow2(content: @Composable () -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) { content() }
-}
-
-@Composable
-private fun InfoCard(s: EarbudsState) {
-    val i = s.info ?: return
-    Section("About these earbuds", Icons.Rounded.Info) {
-        listOfNotNull(
-            i.model?.let { "Model" to it },
-            i.subModel?.let { "Variant" to it },
-            i.firmware?.let { "Firmware" to it },
-            i.hardware?.let { "Hardware" to it },
-            i.serial?.let { "Serial number" to it },
-            i.leftSerial?.let { "Left earbud" to it },
-            i.rightSerial?.let { "Right earbud" to it },
-            s.address?.let { "Bluetooth address" to it },
-        ).forEach { (k, v) ->
-            Row {
-                Text(k, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(140.dp))
-                Text(v, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-    }
-}
-
-@Composable
-private fun LogCard() {
-    val context = LocalContext.current
-    val lines by Earbuds.log.collectAsState()
-    var open by rememberSaveable { mutableStateOf(false) }
-    Section("Connection log", Icons.Rounded.Subject, action = {
-        Row {
-            if (open) IconButton(onClick = {
-                context.getSystemService(ClipboardManager::class.java)
-                    .setPrimaryClip(ClipData.newPlainText("HFreebuds log", lines.joinToString("\n")))
-            }) { Icon(Icons.Rounded.ContentCopy, "Copy log") }
-            IconButton(onClick = { open = !open }) { Icon(if (open) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, "Show log") }
-        }
-    }) {
-        if (!open) {
-            Note("Packets sent to and received from the earbuds. Useful if a setting doesn't work.")
-        } else {
-            Column(Modifier.heightIn(max = 360.dp).horizontalScroll(rememberScrollState())) {
-                lines.takeLast(60).forEach {
-                    Text(it, fontFamily = FontFamily.Monospace, fontSize = 11.sp, maxLines = 1)
-                }
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------- device picker
+// ============================================================ device picker
 
 @SuppressLint("MissingPermission")
 @Composable

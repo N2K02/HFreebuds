@@ -170,18 +170,18 @@ data class DeviceProfile(
 
 object Options {
     val tap = listOf(
-        Option(-1, "Off"), Option(1, "Play / pause"), Option(2, "Next song"),
-        Option(7, "Previous song"), Option(0, "Voice assistant"),
+        Option(1, "Play/Pause"), Option(2, "Next song"),
+        Option(7, "Previous song"), Option(0, "Wake voice assistant"), Option(-1, "None"),
     )
-    val tapInCall = listOf(Option(-1, "Off"), Option(0, "Answer / end call"))
+    val tapInCall = listOf(Option(0, "Answer/End call"), Option(-1, "None"))
     fun longTap(extra: Boolean) = buildList {
-        add(Option(-1, "Off"))
-        add(Option(10, "Switch noise control"))
+        add(Option(10, "Enable/Disable noise canceling"))
         if (extra) {
-            add(Option(0, "Voice assistant"))
+            add(Option(0, "Wake voice assistant"))
             add(Option(18, "Volume up"))
             add(Option(19, "Volume down"))
         }
+        add(Option(-1, "None"))
     }
     val longTapAnc = listOf(
         Option(1, "Off ⇄ Noise cancelling"),
@@ -189,5 +189,5 @@ object Options {
         Option(3, "Cancelling ⇄ Awareness"),
         Option(4, "Off ⇄ Awareness"),
     )
-    val swipe = listOf(Option(-1, "Off"), Option(0, "Change volume"))
+    val swipe = listOf(Option(0, "Adjust volume"), Option(-1, "None"))
 }

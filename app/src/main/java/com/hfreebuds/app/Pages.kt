@@ -8,6 +8,7 @@ import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -124,13 +125,33 @@ fun GesturesPage(onBack: () -> Unit) {
             return@PageScaffold
         }
         item {
-            SecondaryTabRow(
-                selectedTabIndex = tabs.indexOf(current).coerceAtLeast(0),
-                containerColor = androidx.compose.ui.graphics.Color.Transparent,
-            ) {
-                tabs.forEachIndexed { i, name ->
-                    Tab(selected = tab == i, onClick = { tab = i }, text = { Text(name, maxLines = 1, style = MaterialTheme.typography.labelLarge) })
+            // Equal-ish tabs that never wrap: each gets space in proportion to its label.
+            Column {
+                Row(Modifier.fillMaxWidth()) {
+                    tabs.forEachIndexed { i, name ->
+                        val selected = tab == i
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .weight(name.length.toFloat() + 2f)
+                                .clickable(role = Role.Tab) { tab = i },
+                        ) {
+                            Text(
+                                name, maxLines = 1, softWrap = false,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 14.dp),
+                            )
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(3.dp)
+                                    .background(if (selected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent),
+                            )
+                        }
+                    }
                 }
+                androidx.compose.material3.HorizontalDivider()
             }
         }
         item {

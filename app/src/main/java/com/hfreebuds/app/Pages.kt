@@ -155,7 +155,7 @@ fun GesturesPage(onBack: () -> Unit) {
                     { side, v -> Earbuds.setDoubleTap(side, v) }) { dialog = it }
             }
             "Triple-tap" -> s.tripleTap?.let { g ->
-                sideRows(g, tapOptions(s.tripleTapOptions), "Triple-tap",
+                sideRows(g, s.tripleTapOptions?.let { tapOptions(it) } ?: Options.tap.filter { it.value in listOf(2, 7, -1) }, "Triple-tap",
                     { side, v -> Earbuds.setTripleTap(side, v) }) { dialog = it }
             }
             "Press & hold" -> s.longTap?.let { g ->

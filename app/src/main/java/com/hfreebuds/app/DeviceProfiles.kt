@@ -56,7 +56,7 @@ data class DeviceProfile(
             cancelLevels = listOf(Option(3, "Dynamic"), Option(1, "Cozy"), Option(0, "General")),
             inEar = true, autoPause = true, quality = true, lowLatency = true,
             eqPresets = presets4,
-            doubleTap = true, doubleTapInCall = true, longTap = true, longTapRight = true, swipe = true,
+            doubleTap = true, doubleTapInCall = true, tripleTap = true, longTap = true, longTapRight = true, swipe = true,
             language = true, dualConnect = true,
             verified = setOf("battery", "anc", "autoPause", "quality", "lowLatency", "eq"),
             rawReads = mapOf(

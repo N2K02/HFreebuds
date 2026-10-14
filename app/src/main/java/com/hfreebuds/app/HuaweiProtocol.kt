@@ -17,7 +17,7 @@ class HuaweiPacket(val command: Int, val params: LinkedHashMap<Int, ByteArray> =
     val service: Int get() = command shr 8
     val id: Int get() = command and 0xFF
 
-    fun param(vararg types: Int): ByteArray? = types.firstNotNullOfOrNull { params[it] }
+    fun param(vararg types: Int): ByteArray? = types.asList().firstNotNullOfOrNull { params[it] }
 
     /** Single byte param as a signed number (Huawei uses -1 for "off"). */
     fun byte(type: Int): Int? = params[type]?.takeIf { it.size == 1 }?.get(0)?.toInt()

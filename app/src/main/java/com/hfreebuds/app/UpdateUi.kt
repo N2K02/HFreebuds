@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -253,7 +255,7 @@ fun UpdateFooterBar(appName: String, modifier: Modifier = Modifier) {
                         onClick = { AppUpdater.check(manual = true) }, contentPadding = small, modifier = buttonModifier,
                     ) {
                         androidx.compose.material3.Icon(
-                            androidx.compose.material.icons.Icons.Rounded.Check, null,
+                            Icons.Rounded.Check, null,
                             Modifier.size(16.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50),
                         )
                         Text("  Up to date", style = MaterialTheme.typography.labelMedium)

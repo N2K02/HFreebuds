@@ -1,6 +1,9 @@
 package com.hfreebuds.app
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -66,7 +69,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
@@ -160,11 +163,12 @@ private fun HomePage(
     val s by Earbuds.state.collectAsState()
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val connected = s.link == Link.CONNECTED
+    val activity = LocalContext.current.activity()
 
     Scaffold(
         modifier = Modifier.nestedScroll(FooterScroll.connection).nestedScroll(scroll.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         s.profile?.name ?: s.deviceName ?: "HFreebuds",
@@ -172,7 +176,16 @@ private fun HomePage(
                     )
                 },
                 actions = {
-                    if (hasPermission) IconButton(onClick = onChoose) { Icon(Icons.Rounded.SwapHoriz, "Choose earbuds") }
+                    if (hasPermission) {
+                        TextButton(onClick = onChoose) {
+                            Icon(Icons.Rounded.SwapHoriz, "Choose earbuds", modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text("Choose your earbuds", maxLines = 1)
+                        }
+                    }
+                    IconButton(onClick = { activity?.finish() }) {
+                        Icon(Icons.Rounded.Close, "Quit app")
+                    }
                 },
                 scrollBehavior = scroll,
             )
@@ -525,4 +538,11 @@ private fun DevicePicker(onDismiss: () -> Unit, onPick: (String) -> Unit) {
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
     )
+}
+
+
+private tailrec fun Context.activity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.activity()
+    else -> null
 }

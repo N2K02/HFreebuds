@@ -1,8 +1,6 @@
 package com.hfreebuds.app
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.animation.AnimatedVisibility
@@ -36,11 +34,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,8 +80,6 @@ object FooterScroll {
 @Composable
 fun UpdateCard(modifier: Modifier = Modifier) {
     val state by AppUpdater.state.collectAsState()
-    var diagnosticsVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(state) { if (state !is AppUpdater.State.Failed) diagnosticsVisible = false }
     val activity = LocalContext.current.activity()
     val visible = state is AppUpdater.State.Checking || state is AppUpdater.State.Available || state is AppUpdater.State.Downloading ||
         state is AppUpdater.State.NeedsPermission || state is AppUpdater.State.Ready ||
@@ -110,7 +104,7 @@ fun UpdateCard(modifier: Modifier = Modifier) {
                         Title("Update available: ${s.release.versionName}")
                         Notes(s.release)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { diagnosticsVisible = false; AppUpdater.update(s.release) }) { Text("Update now") }
+                            Button(onClick = { AppUpdater.update(s.release) }) { Text("Update now") }
                             TextButton(onClick = { AppUpdater.dismiss() }) { Text("Later") }
                             TextButton(onClick = { AppUpdater.skip(s.release) }) { Text("Skip this version") }
                         }
@@ -152,21 +146,8 @@ fun UpdateCard(modifier: Modifier = Modifier) {
                     is AppUpdater.State.Failed -> {
                         Title("Update problem")
                         Text(s.message, style = MaterialTheme.typography.bodyMedium)
-                        TextButton(onClick = { diagnosticsVisible = !diagnosticsVisible }) {
-                            Text(if (diagnosticsVisible) "Hide details" else "Show details")
-                        }
-                        if (diagnosticsVisible) {
-                            Text(
-                                s.diagnostics.ifBlank { "No additional diagnostic details were captured." },
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                            Button(onClick = {
-                                val clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                clipboard?.setPrimaryClip(ClipData.newPlainText("Update diagnostics", s.diagnostics))
-                            }) { Text("Copy diagnostics") }
-                        }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            s.release?.let { r -> Button(onClick = { diagnosticsVisible = false; AppUpdater.update(r) }) { Text("Try again") } }
+                            s.release?.let { r -> Button(onClick = { AppUpdater.update(r) }) { Text("Try again") } }
                             TextButton(onClick = { activity?.let { AppUpdater.openReleasePage(it, s.release) } }) {
                                 Text("Open release page")
                             }

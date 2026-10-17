@@ -52,6 +52,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.NoiseAware
 import androidx.compose.material.icons.rounded.NoiseControlOff
+import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Subject
@@ -66,6 +67,7 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -183,8 +185,8 @@ private fun HomePage(
                             Text("Choose your earbuds", maxLines = 1)
                         }
                     }
-                    IconButton(onClick = { activity?.finish() }) {
-                        Icon(Icons.Rounded.Close, "Quit app")
+                    FilledTonalIconButton(onClick = { activity?.finishAndRemoveTask() }) {
+                        Icon(Icons.Rounded.PowerSettingsNew, contentDescription = "Quit app")
                     }
                 },
                 scrollBehavior = scroll,

@@ -186,7 +186,6 @@ private fun HomePage(
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item { UpdateCard() }
             if (!hasPermission) {
                 item {
                     Panel {

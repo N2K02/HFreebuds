@@ -77,3 +77,14 @@ Every push to `main` runs the protocol tests, builds the APK with GitHub Actions
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+
+## Official download and project links
+
+Android companion app for managing supported Huawei FreeBuds earbuds and their sound, noise control, gestures, and device settings.
+
+- **Latest Android APK:** [Download the latest release](https://github.com/N2K02/HFreebuds/releases/latest)
+- **All releases and version history:** [GitHub Releases](https://github.com/N2K02/HFreebuds/releases)
+- **Source code and issue reporting:** [HFreebuds repository](https://github.com/N2K02/HFreebuds)
+
+The APK is distributed through GitHub Releases. If no release is available, check the repository's Releases page for future published builds. Google indexing is not guaranteed; this section provides clear crawlable links for visitors and search engines.

@@ -24,7 +24,8 @@ Laid out like the official app, in Material 3 Expressive: a home screen with **S
 | **Find my earbuds** | A loud chirp on the left, right or both earbuds, getting louder |
 | **Phone audio** | Shows the Bluetooth codec in use (LDAC, AAC, SBC…), sample rate, bit depth and LDAC quality; shortcuts to the codec setting and the left/right balance setting, with left/right test tones |
 | **About** | Model, firmware, hardware version, serial numbers (each earbud) |
-| **Quick Settings tile** | "Noise control": tap to cycle Off → Noise cancelling (→ Awareness) without opening the app |
+| **Quick Settings tiles** | "Noise control": tap to cycle Off → Noise cancelling (→ Awareness) without opening the app. "Earbuds battery": the last left / right / case reading; tap to check again |
+| **Reconnects by itself** | While the app is open, it reconnects as soon as your earbuds come back (e.g. out of the case) |
 | **Connection log** | The packets sent and received, with a copy button, to troubleshoot a setting |
 | **Updates** | Built-in: checks this repo's releases and installs new versions through Android's installer |
 

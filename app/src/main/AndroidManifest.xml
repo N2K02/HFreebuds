@@ -40,6 +40,18 @@
             </intent-filter>
         </service>
 
+        <!-- Quick Settings tile: earbuds battery (last reading; tap to check again) -->
+        <service
+            android:name=".BatteryTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_battery"
+            android:label="Earbuds battery"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <!-- Shares a downloaded update APK with Android's installer (read-only, not exported) -->
         <provider
             android:name=".UpdateFileProvider"

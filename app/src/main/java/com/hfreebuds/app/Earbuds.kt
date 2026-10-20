@@ -308,6 +308,8 @@ object Earbuds {
                         ),
                     )
                 }
+                // Kept for the Quick Settings battery tile.
+                _state.value.battery?.let { BatteryCache.save(app, it) }
             }
             Cmd.STATE_EVENT -> {
                 p.param(8, 9)?.takeIf { it.size == 1 }?.let { v -> _state.update { it.copy(inEar = v[0].toInt() == 1) } }

@@ -82,11 +82,21 @@ object AppUpdater {
     val state: StateFlow<State> = _state
 
     private val prefs by lazy { app.getSharedPreferences("app_updater", Context.MODE_PRIVATE) }
+    private val _experimentalEnabled = MutableStateFlow(false)
+    val experimentalEnabled: StateFlow<Boolean> = _experimentalEnabled
+    fun setExperimentalEnabled(enabled: Boolean) {
+        _experimentalEnabled.value = enabled
+        prefs.edit().putBoolean("experimentalEnabled", enabled).apply()
+        dismiss()
+        check(manual = true)
+    }
 
     fun init(context: Context, repo: String, appName: String) {
         app = context.applicationContext
         this.repo = repo
         this.appName = appName
+        _experimentalEnabled.value = app.getSharedPreferences("app_updater", Context.MODE_PRIVATE)
+            .getBoolean("experimentalEnabled", false)
         if (context is Activity) activityRef = WeakReference(context)
         // A new app start: an update that installed (or was abandoned) leaves its APK behind.
         if (_state.value is State.Idle) runCatching { updateDir().deleteRecursively() }
@@ -116,7 +126,11 @@ object AppUpdater {
         if (job?.isActive == true) return
         job = scope.launch {
             _state.value = State.Checking
-            val result = runCatching { latestRelease() }
+            val result = runCatching {
+                val stable = latestRelease()
+                val experimental = if (_experimentalEnabled.value) runCatching { experimentalRelease() }.getOrNull() else null
+                listOfNotNull(stable, experimental).maxByOrNull { it.versionCode }
+            }
             prefs.edit().putLong("lastCheck", System.currentTimeMillis()).apply()
             val release = result.getOrNull()
             _state.value = when {
@@ -233,6 +247,26 @@ object AppUpdater {
         } finally {
             connection.disconnect()
         }
+    }
+
+    private suspend fun experimentalRelease(): Release? = withContext(Dispatchers.IO) {
+        val c = URL("https://n2k02.github.io/hfreebuds/updates/experimental.json").openConnection() as HttpURLConnection
+        try {
+            c.connectTimeout = 10_000
+            c.readTimeout = 15_000
+            if (c.responseCode == 404) return@withContext null
+            if (c.responseCode != 200) throw IOException("Experimental manifest HTTP ${c.responseCode}")
+            val o = JSONObject(c.inputStream.bufferedReader().use { it.readText() })
+            if (o.optString("channel") != "experimental") return@withContext null
+            val url = o.optString("apkUrl")
+            val sha = o.optString("sha256").lowercase()
+            if (o.optLong("versionCode") <= 0 || !url.startsWith("https://github.com/") ||
+                !Regex("[a-f0-9]{64}").matches(sha)) return@withContext null
+            val array = o.optJSONArray("notes")
+            Release(o.optString("tag"), o.optString("versionName"), o.optLong("versionCode"),
+                if (array == null) emptyList() else (0 until array.length()).map { array.optString(it) },
+                url, o.optString("apkName"), o.optLong("apkSize"), sha, o.optString("pageUrl"))
+        } finally { c.disconnect() }
     }
 
     private suspend fun legacyLatestRelease(): Release? = withContext(Dispatchers.IO) {

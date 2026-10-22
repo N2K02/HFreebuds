@@ -714,6 +714,13 @@ fun UpdatesPage(onBack: () -> Unit) {
             Panel {
                 Text("HFreebuds", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text("Current version  v${AppUpdater.installedVersionName}", style = MaterialTheme.typography.bodyLarge)
+                val experimentalEnabled by AppUpdater.experimentalEnabled.collectAsState()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Experimental updates", modifier = Modifier.weight(1f))
+                    androidx.compose.material3.Switch(checked = experimentalEnabled, onCheckedChange = AppUpdater::setExperimentalEnabled)
+                }
+                Note("Opt in to preview releases. Stable is selected by default.")
+
                 Note(
                     when (state) {
                         is AppUpdater.State.Checking -> "Checking GitHub for a newer release…"

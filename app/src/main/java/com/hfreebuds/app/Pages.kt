@@ -564,14 +564,17 @@ fun DualPage(onBack: () -> Unit) {
                             ) {
                                 DropdownMenuItem(
                                     text = { Text(if (d.connected) "Disconnect" else "Connect") },
+                                    leadingIcon = { Icon(if (d.connected) Icons.Rounded.LinkOff else Icons.Rounded.Link, null) },
                                     onClick = { menu = false; Earbuds.dualCommand(if (d.connected) 2 else 1, d.mac) },
                                 )
                                 if (autoSupported) DropdownMenuItem(
                                     text = { Text(if (d.autoConnect == true) "Turn off auto-connect" else "Turn on auto-connect") },
+                                    leadingIcon = { Icon(Icons.Rounded.Autorenew, null) },
                                     onClick = { menu = false; Earbuds.dualCommand(if (d.autoConnect == true) 5 else 4, d.mac) },
                                 )
                                 DropdownMenuItem(
                                     text = { Text("Forget this device") },
+                                    leadingIcon = { Icon(Icons.Rounded.DeleteOutline, null) },
                                     onClick = { menu = false; Earbuds.dualCommand(3, d.mac) },
                                 )
                             }

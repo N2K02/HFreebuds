@@ -707,28 +707,28 @@ fun AboutPage(onBack: () -> Unit) {
 
 @Composable
 fun UpdatesPage(onBack: () -> Unit) {
-    val state by AppUpdater.state.collectAsState()
+    val state by LiveUpdater.controller.status.collectAsState()
     PageScaffold("Updates", onBack) {
         item { UpdateCard() }
         item {
             Panel {
                 Text("HFreebuds", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text("Current version  v${AppUpdater.installedVersionName}", style = MaterialTheme.typography.bodyLarge)
-                val experimentalEnabled by AppUpdater.experimentalEnabled.collectAsState()
+                Text("Current version  v${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyLarge)
+                val experimentalEnabled by LiveUpdater.experimentalEnabled.collectAsState()
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Experimental updates", modifier = Modifier.weight(1f))
-                    androidx.compose.material3.Switch(checked = experimentalEnabled, onCheckedChange = AppUpdater::setExperimentalEnabled)
+                    androidx.compose.material3.Switch(checked = experimentalEnabled, onCheckedChange = LiveUpdater::setExperimentalEnabled)
                 }
                 Note("Opt in to preview releases. Stable is selected by default.")
 
                 Note(
                     when (state) {
-                        is AppUpdater.State.Checking -> "Checking GitHub for a newer release…"
-                        is AppUpdater.State.UpToDate -> "You have the latest version."
+                        is dev.n2k02.updater.UpdateStatus.Checking -> "Checking GitHub for a newer release…"
+                        is dev.n2k02.updater.UpdateStatus.Current -> "You have the latest version."
                         else -> "Updates come from this app's GitHub releases and install through Android's installer."
                     },
                 )
-                FilledTonalButton(onClick = { AppUpdater.check(manual = true) }) {
+                FilledTonalButton(onClick = { LiveUpdater.controller.check(manual = true) }) {
                     if (state is AppUpdater.State.UpToDate) {
                         Icon(Icons.Rounded.Check, null, Modifier.size(18.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50))
                         Text("  Up to date")

@@ -557,7 +557,11 @@ fun DualPage(onBack: () -> Unit) {
                         }
                         Box {
                             IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.ExpandMore, "More") }
-                            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            DropdownMenu(
+                                expanded = menu,
+                                onDismissRequest = { menu = false },
+                                modifier = Modifier.clip(RoundedCornerShape(22.dp)),
+                            ) {
                                 DropdownMenuItem(
                                     text = { Text(if (d.connected) "Disconnect" else "Connect") },
                                     onClick = { menu = false; Earbuds.dualCommand(if (d.connected) 2 else 1, d.mac) },

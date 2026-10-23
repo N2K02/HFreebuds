@@ -53,3 +53,11 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
 }
+
+ // Opt-in compile-only shared library evaluation; no production runtime cutover.
+dependencies {
+    if (providers.gradleProperty("useN2K02Libraries").orNull == "true") {
+        implementation("dev.n2k02:theme:0.1.4")
+        implementation("dev.n2k02:updater:0.1.11")
+    }
+}

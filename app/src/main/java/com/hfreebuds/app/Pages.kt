@@ -742,7 +742,6 @@ fun UpdatesPage(onBack: () -> Unit) {
             }
         }
         item { androidx.compose.material3.HorizontalDivider() }
-        item { Text("App updates", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
         item { UpdateCard() }
         item {
             Note("Earbud firmware updates aren't supported; use HUAWEI AI Life for those.", Modifier.padding(horizontal = 12.dp))

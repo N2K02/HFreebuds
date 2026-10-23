@@ -120,9 +120,7 @@ fun UpdateFooterBar(appName: String, modifier: Modifier = Modifier) {
             is dev.n2k02.updater.UpdateStatus.Available -> Text("Update available")
             is dev.n2k02.updater.UpdateStatus.Ready -> Text("Ready to install")
             is dev.n2k02.updater.UpdateStatus.NeedsInstallPermission -> Text("Install permission required")
-            else -> FilledTonalButton(onClick = { LiveUpdater.controller.check(manual = true) }) {
-                Text("Check for updates")
-            }
+            else -> Text("Up to date", style = MaterialTheme.typography.labelMedium)
         }
     }
 }

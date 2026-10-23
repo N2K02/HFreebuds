@@ -718,40 +718,34 @@ fun AboutPage(onBack: () -> Unit) {
 
 @Composable
 fun UpdatesPage(onBack: () -> Unit) {
-    val state by LiveUpdater.controller.status.collectAsState()
-    PageScaffold("Updates", onBack) {
-        item { UpdateCard() }
+    PageScaffold("About & updates", onBack) {
         item {
+            androidx.compose.material3.ListItem(
+                headlineContent = { Text("HFreebuds") },
+                supportingContent = { Text("Version " + BuildConfig.VERSION_NAME) },
+                leadingContent = { Icon(Icons.Rounded.Settings, null) },
+            )
+        }
+        item {
+            val experimentalEnabled by LiveUpdater.experimentalEnabled.collectAsState()
             Panel {
-                Text("HFreebuds", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text("Current version  v${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyLarge)
-                val experimentalEnabled by LiveUpdater.experimentalEnabled.collectAsState()
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Experimental updates", modifier = Modifier.weight(1f))
-                    androidx.compose.material3.Switch(checked = experimentalEnabled, onCheckedChange = LiveUpdater::setExperimentalEnabled)
-                }
-                Note("Opt in to preview releases. Stable is selected by default.")
-
-                Note(
-                    when (state) {
-                        is dev.n2k02.updater.UpdateStatus.Checking -> "Checking GitHub for a newer release…"
-                        is dev.n2k02.updater.UpdateStatus.Current -> "You have the latest version."
-                        else -> "Updates come from this app's GitHub releases and install through Android's installer."
-                    },
-                )
-                FilledTonalButton(onClick = { LiveUpdater.controller.check(manual = true) }) {
-                    if (state is AppUpdater.State.UpToDate) {
-                        Icon(Icons.Rounded.Check, null, Modifier.size(18.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50))
-                        Text("  Up to date")
-                    } else Text("Check for updates")
+                    Column(Modifier.weight(1f)) {
+                        Text("Experimental updates", style = MaterialTheme.typography.titleMedium)
+                        Note("Offer signed APKs from successful pull request builds. Test builds may have bugs.")
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = experimentalEnabled,
+                        onCheckedChange = LiveUpdater::setExperimentalEnabled,
+                    )
                 }
             }
         }
+        item { androidx.compose.material3.HorizontalDivider() }
+        item { Text("App updates", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 16.dp)) }
+        item { UpdateCard() }
         item {
-            Note(
-                "These are updates for the HFreebuds app. Earbud firmware updates aren't supported; use HUAWEI AI Life for those.",
-                Modifier.padding(horizontal = 12.dp),
-            )
+            Note("Earbud firmware updates aren't supported; use HUAWEI AI Life for those.", Modifier.padding(horizontal = 12.dp))
         }
     }
 }

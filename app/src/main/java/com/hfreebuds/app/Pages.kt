@@ -31,6 +31,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bluetooth
+import androidx.compose.material.icons.rounded.BluetoothDisabled
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Star
@@ -85,7 +89,7 @@ import kotlinx.coroutines.launch
 fun Panel(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(28.dp),
+        
         modifier = modifier.fillMaxWidth(),
     ) { Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { content() } }
 }
@@ -512,8 +516,8 @@ fun FindPage(onBack: () -> Unit) {
 private fun FindButton(label: String, badge: String, active: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Surface(
         color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(28.dp),
-        modifier = modifier.clip(RoundedCornerShape(28.dp)).clickable(onClick = onClick),
+        
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Row(Modifier.padding(horizontal = 20.dp, vertical = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (active) "Stop" else label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
@@ -557,17 +561,24 @@ fun DualPage(onBack: () -> Unit) {
                         }
                         Box {
                             IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.ExpandMore, "More") }
-                            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            DropdownMenu(
+                                expanded = menu,
+                                onDismissRequest = { menu = false },
+                                modifier = Modifier.clip(RoundedCornerShape(22.dp)),
+                            ) {
                                 DropdownMenuItem(
                                     text = { Text(if (d.connected) "Disconnect" else "Connect") },
+                                    leadingIcon = { Icon(if (d.connected) Icons.Rounded.BluetoothDisabled else Icons.Rounded.Bluetooth, null) },
                                     onClick = { menu = false; Earbuds.dualCommand(if (d.connected) 2 else 1, d.mac) },
                                 )
                                 if (autoSupported) DropdownMenuItem(
                                     text = { Text(if (d.autoConnect == true) "Turn off auto-connect" else "Turn on auto-connect") },
+                                    leadingIcon = { Icon(Icons.Rounded.Settings, null) },
                                     onClick = { menu = false; Earbuds.dualCommand(if (d.autoConnect == true) 5 else 4, d.mac) },
                                 )
                                 DropdownMenuItem(
                                     text = { Text("Forget this device") },
+                                    leadingIcon = { Icon(Icons.Rounded.Delete, null) },
                                     onClick = { menu = false; Earbuds.dualCommand(3, d.mac) },
                                 )
                             }
@@ -707,40 +718,31 @@ fun AboutPage(onBack: () -> Unit) {
 
 @Composable
 fun UpdatesPage(onBack: () -> Unit) {
-    val state by AppUpdater.state.collectAsState()
-    PageScaffold("Updates", onBack) {
-        item { UpdateCard() }
+    PageScaffold("About & updates", onBack) {
         item {
-            Panel {
-                Text("HFreebuds", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text("Current version  v${AppUpdater.installedVersionName}", style = MaterialTheme.typography.bodyLarge)
-                val experimentalEnabled by AppUpdater.experimentalEnabled.collectAsState()
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Experimental updates", modifier = Modifier.weight(1f))
-                    androidx.compose.material3.Switch(checked = experimentalEnabled, onCheckedChange = AppUpdater::setExperimentalEnabled)
-                }
-                Note("Opt in to preview releases. Stable is selected by default.")
-
-                Note(
-                    when (state) {
-                        is AppUpdater.State.Checking -> "Checking GitHub for a newer release…"
-                        is AppUpdater.State.UpToDate -> "You have the latest version."
-                        else -> "Updates come from this app's GitHub releases and install through Android's installer."
-                    },
-                )
-                FilledTonalButton(onClick = { AppUpdater.check(manual = true) }) {
-                    if (state is AppUpdater.State.UpToDate) {
-                        Icon(Icons.Rounded.Check, null, Modifier.size(18.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50))
-                        Text("  Up to date")
-                    } else Text("Check for updates")
-                }
-            }
+            androidx.compose.material3.ListItem(
+                headlineContent = { Text("HFreebuds") },
+                supportingContent = { Text("Version " + BuildConfig.VERSION_NAME) },
+                leadingContent = { Icon(Icons.Rounded.Settings, null) },
+            )
         }
         item {
-            Note(
-                "These are updates for the HFreebuds app. Earbud firmware updates aren't supported; use HUAWEI AI Life for those.",
-                Modifier.padding(horizontal = 12.dp),
+            val experimentalEnabled by LiveUpdater.experimentalEnabled.collectAsState()
+            androidx.compose.material3.ListItem(
+                headlineContent = { Text("Experimental updates") },
+                supportingContent = { Text("Offer signed APKs from successful pull request builds. Test builds may have bugs.") },
+                trailingContent = {
+                    androidx.compose.material3.Switch(
+                        checked = experimentalEnabled,
+                        onCheckedChange = LiveUpdater::setExperimentalEnabled,
+                    )
+                },
             )
+        }
+        item { androidx.compose.material3.HorizontalDivider() }
+        item { UpdateCard() }
+        item {
+            Note("Earbud firmware updates aren't supported; use HUAWEI AI Life for those.", Modifier.padding(horizontal = 12.dp))
         }
     }
 }

@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        AppUpdater.init(this, "N2K02/HFreebuds", "HFreebuds")
+        LiveUpdater.init(this)
         Earbuds.init(this)
         hasPermission.value = checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         setContent {
@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Earbuds.screenOpen = true
-        AppUpdater.onResume(this)
+        LiveUpdater.onResume(this)
         hasPermission.value = hasBluetoothPermission()
         connectSaved()
     }

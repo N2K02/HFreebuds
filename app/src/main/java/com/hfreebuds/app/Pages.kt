@@ -89,7 +89,7 @@ import kotlinx.coroutines.launch
 fun Panel(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(28.dp),
+        
         modifier = modifier.fillMaxWidth(),
     ) { Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) { content() } }
 }
@@ -516,8 +516,8 @@ fun FindPage(onBack: () -> Unit) {
 private fun FindButton(label: String, badge: String, active: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Surface(
         color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(28.dp),
-        modifier = modifier.clip(RoundedCornerShape(28.dp)).clickable(onClick = onClick),
+        
+        modifier = modifier.clickable(onClick = onClick),
     ) {
         Row(Modifier.padding(horizontal = 20.dp, vertical = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (active) "Stop" else label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

@@ -1,4 +1,5 @@
 name: Shared libraries experimental
+# Rebuild requested for the latest experimental HFreebuds APK.
 on:
   push:
     branches: [experimental/shared-libraries]

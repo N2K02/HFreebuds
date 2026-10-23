@@ -107,93 +107,21 @@ private fun Notes(release: AppUpdater.Release) {
  */
 @Composable
 fun UpdateFooterBar(appName: String, modifier: Modifier = Modifier) {
-    val state by AppUpdater.state.collectAsState()
-    val activity = LocalContext.current.activity()
-    val busy = state is AppUpdater.State.Downloading || state is AppUpdater.State.Ready ||
-        state is AppUpdater.State.NeedsPermission
-    val scheme = MaterialTheme.colorScheme
-    AnimatedVisibility(
-        visible = FooterScroll.visible || busy,
-        enter = expandVertically(expandFrom = Alignment.Top),
-        exit = shrinkVertically(shrinkTowards = Alignment.Top),
-        modifier = modifier,
+    val status by LiveUpdater.controller.status.collectAsState()
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Surface(
-            color = scheme.surfaceContainer,
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-            tonalElevation = 2.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
-                    .heightIn(min = 40.dp),
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(scheme.primaryContainer),
-                ) {
-                    Text(
-                        appName.take(1),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = scheme.onPrimaryContainer,
-                    )
-                }
-                Text(
-                    "$appName  ·  v${AppUpdater.installedVersionName}",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 10.dp),
-                )
-                val small = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
-                val buttonModifier = Modifier.heightIn(min = 32.dp)
-                when (val s = state) {
-                    is AppUpdater.State.Checking -> Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(end = 8.dp),
-                    ) {
-                        CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-                        Text("  Checking…", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
-                    }
-                    is AppUpdater.State.Available -> Button(
-                        onClick = { AppUpdater.update(s.release) }, contentPadding = small, modifier = buttonModifier,
-                    ) { Text("Update to ${s.release.versionName}", style = MaterialTheme.typography.labelMedium) }
-                    is AppUpdater.State.Downloading -> Text(
-                        s.progress?.let { "Downloading ${(it * 100).toInt()}%" } ?: "Downloading…",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = scheme.primary,
-                        modifier = Modifier.padding(end = 8.dp),
-                    )
-                    is AppUpdater.State.Ready -> Button(
-                        onClick = { AppUpdater.install(s.release) }, contentPadding = small, modifier = buttonModifier,
-                    ) { Text("Install ${s.release.versionName}", style = MaterialTheme.typography.labelMedium) }
-                    is AppUpdater.State.NeedsPermission -> Button(
-                        onClick = { activity?.let { AppUpdater.openInstallPermission(it) } },
-                        contentPadding = small, modifier = buttonModifier,
-                    ) { Text("Allow installs", style = MaterialTheme.typography.labelMedium) }
-                    is AppUpdater.State.UpToDate -> FilledTonalButton(
-                        onClick = { AppUpdater.check(manual = true) }, contentPadding = small, modifier = buttonModifier,
-                    ) {
-                        androidx.compose.material3.Icon(
-                            Icons.Rounded.Check, null,
-                            Modifier.size(16.dp), tint = androidx.compose.ui.graphics.Color(0xFF4CAF50),
-                        )
-                        Text("  Up to date", style = MaterialTheme.typography.labelMedium)
-                    }
-                    else -> FilledTonalButton(
-                        onClick = { AppUpdater.check(manual = true) }, contentPadding = small, modifier = buttonModifier,
-                    ) { Text("Check for updates", style = MaterialTheme.typography.labelMedium) }
-                }
+        Text(appName, style = MaterialTheme.typography.labelMedium)
+        when (status) {
+            is dev.n2k02.updater.UpdateStatus.Checking -> Text("Checking…")
+            is dev.n2k02.updater.UpdateStatus.Downloading -> Text("Downloading…")
+            is dev.n2k02.updater.UpdateStatus.Available -> Text("Update available")
+            is dev.n2k02.updater.UpdateStatus.Ready -> Text("Ready to install")
+            is dev.n2k02.updater.UpdateStatus.NeedsInstallPermission -> Text("Install permission required")
+            else -> FilledTonalButton(onClick = { LiveUpdater.controller.check(manual = true) }) {
+                Text("Check for updates")
             }
         }
     }

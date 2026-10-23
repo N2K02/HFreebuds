@@ -728,18 +728,16 @@ fun UpdatesPage(onBack: () -> Unit) {
         }
         item {
             val experimentalEnabled by LiveUpdater.experimentalEnabled.collectAsState()
-            Panel {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Experimental updates", style = MaterialTheme.typography.titleMedium)
-                        Note("Offer signed APKs from successful pull request builds. Test builds may have bugs.")
-                    }
+            androidx.compose.material3.ListItem(
+                headlineContent = { Text("Experimental updates") },
+                supportingContent = { Text("Offer signed APKs from successful pull request builds. Test builds may have bugs.") },
+                trailingContent = {
                     androidx.compose.material3.Switch(
                         checked = experimentalEnabled,
                         onCheckedChange = LiveUpdater::setExperimentalEnabled,
                     )
-                }
-            }
+                },
+            )
         }
         item { androidx.compose.material3.HorizontalDivider() }
         item { UpdateCard() }

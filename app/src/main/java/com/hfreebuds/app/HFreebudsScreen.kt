@@ -164,6 +164,7 @@ private fun HomePage(
 ) {
     val s by Earbuds.state.collectAsState()
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val updateStatus by LiveUpdater.controller.status.collectAsState()
     val connected = s.link == Link.CONNECTED
     val activity = LocalContext.current.activity()
 
@@ -209,6 +210,7 @@ private fun HomePage(
                         Button(onClick = onAskPermission) { Text("Allow") }
                     }
                 }
+                item { Tile("About & updates", Icons.Rounded.SystemUpdate, Modifier.fillMaxWidth(), updateStatus = updateStatus) { open(Page.UPDATES) } }
                 return@LazyColumn
             }
 
@@ -254,7 +256,12 @@ private fun HomePage(
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         pair.forEach { (title, icon, target) ->
-                            Tile(title, icon, Modifier.weight(1f)) { open(target) }
+                            Tile(
+                                title, icon, Modifier.weight(1f),
+                                updateStatus = updateStatus.takeIf {
+                                    target == Page.UPDATES || target == Page.SETTINGS
+                                },
+                            ) { open(target) }
                         }
                         if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }

@@ -224,7 +224,7 @@ fun IconBadge(icon: ImageVector, modifier: Modifier = Modifier, size: Int = 40) 
 
 /** A square-ish tile for the "More" grid. */
 @Composable
-fun Tile(title: String, icon: ImageVector, modifier: Modifier = Modifier, subtitle: String? = null, onClick: () -> Unit) {
+fun Tile(title: String, icon: ImageVector, modifier: Modifier = Modifier, subtitle: String? = null, updateStatus: dev.n2k02.updater.UpdateStatus? = null, onClick: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(28.dp),
@@ -238,6 +238,7 @@ fun Tile(title: String, icon: ImageVector, modifier: Modifier = Modifier, subtit
                 Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 subtitle?.let { Note(it) }
             }
+            updateStatus?.let { dev.n2k02.updater.N2K02UpdateBadge(it) }
             IconBadge(icon, size = 36)
         }
     }

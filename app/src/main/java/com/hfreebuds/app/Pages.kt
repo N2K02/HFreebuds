@@ -404,9 +404,18 @@ fun WearPage(onBack: () -> Unit) {
 // ============================================================ Earbud settings
 
 @Composable
-fun EarbudSettingsPage(onBack: () -> Unit, openDual: () -> Unit) {
+fun EarbudSettingsPage(onBack: () -> Unit, openDual: () -> Unit, openUpdates: () -> Unit) {
     val s by Earbuds.state.collectAsState()
+    val updaterState by LiveUpdater.controller.status.collectAsState()
     PageScaffold("Earbud settings", onBack) {
+        item {
+            Tile(
+                "About & updates",
+                Icons.Rounded.SystemUpdate,
+                Modifier.fillMaxWidth(),
+                updateStatus = updaterState,
+            ) { openUpdates() }
+        }
         if (s.dualEnabled != null) {
             item { GroupLabel("Connect preference") }
             item {

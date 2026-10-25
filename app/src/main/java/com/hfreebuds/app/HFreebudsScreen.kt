@@ -6,7 +6,10 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Smartphone
@@ -76,6 +79,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -101,7 +106,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
-private enum class Page {
+internal enum class Page {
     HOME, GESTURES, SOUND, WEAR, SETTINGS, FIND, DUAL, LANGUAGE, PHONE, ABOUT, UPDATES, LOG
 }
 
@@ -114,10 +119,16 @@ fun HFreebudsScreen(
 ) {
     var page by rememberSaveable { mutableStateOf(Page.HOME) }
     var picking by remember { mutableStateOf(false) }
-    BackHandler(enabled = page != Page.HOME) { page = if (page == Page.DUAL) Page.SETTINGS else Page.HOME }
-    val back = { page = if (page == Page.DUAL) Page.SETTINGS else Page.HOME }
+    var subpageFromSettings by rememberSaveable { mutableStateOf(false) }
+    val back: () -> Unit = {
+        val parent = if (page != Page.SETTINGS && subpageFromSettings) Page.SETTINGS else Page.HOME
+        page = parent
+        if (parent == Page.HOME) subpageFromSettings = false
+    }
+    BackHandler(enabled = page != Page.HOME) { back() }
 
     AnimatedContent(
+        modifier = Modifier.fillMaxSize(),
         targetState = page,
         transitionSpec = {
             if (targetState == Page.HOME) {
@@ -131,12 +142,17 @@ fun HFreebudsScreen(
         when (p) {
             Page.HOME -> HomePage(
                 hasPermission, onAskPermission, savedAddress, onPick,
-                onChoose = { picking = true }, open = { page = it },
+                onChoose = { picking = true }, open = { subpageFromSettings = false; page = it },
             )
             Page.GESTURES -> GesturesPage(back)
             Page.SOUND -> SoundEffectsPage(back)
             Page.WEAR -> WearPage(back)
-            Page.SETTINGS -> EarbudSettingsPage(back, openDual = { page = Page.DUAL }, openUpdates = { page = Page.UPDATES })
+            Page.SETTINGS -> EarbudSettingsPage(
+                back,
+                openDual = { subpageFromSettings = true; page = Page.DUAL },
+                openUpdates = { subpageFromSettings = true; page = Page.UPDATES },
+                openSubpage = { subpageFromSettings = true; page = it },
+            )
             Page.FIND -> FindPage(back)
             Page.DUAL -> DualPage(back)
             Page.LANGUAGE -> LanguagePage(back)
@@ -173,22 +189,18 @@ private fun HomePage(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        s.profile?.name ?: s.deviceName ?: "HFreebuds",
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(Icons.Rounded.Home, contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                        Text("Home", fontWeight = FontWeight.SemiBold)
+                    }
                 },
                 actions = {
-                    if (hasPermission) {
-                        TextButton(onClick = onChoose) {
-                            Icon(Icons.Rounded.SwapHoriz, "Choose earbuds", modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.size(6.dp))
-                            Text("Choose your earbuds", maxLines = 1)
-                        }
-                    }
-                    FilledTonalIconButton(onClick = { activity?.finishAndRemoveTask() }) {
-                        Icon(Icons.Rounded.PowerSettingsNew, contentDescription = "Quit app")
-                    }
+                    // The top title bar is reserved for page identity and HFreebuds branding.
+                    dev.n2k02.updater.N2K02AppIcon(Modifier.size(28.dp))
+                    Text("HFreebuds", style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 6.dp, end = 12.dp))
                 },
                 scrollBehavior = scroll,
             )
@@ -202,6 +214,25 @@ private fun HomePage(
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // Home-only controls: one labeled Bluetooth picker on the left and Quit on the right.
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FilledTonalButton(onClick = onChoose, enabled = hasPermission) {
+                        Icon(Icons.Rounded.Bluetooth, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text("Choose earbuds")
+                    }
+                    FilledTonalButton(onClick = { activity?.finishAndRemoveTask() }) {
+                        Icon(Icons.Rounded.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text("Quit")
+                    }
+                }
+            }
             if (!hasPermission) {
                 item {
                     Panel {
@@ -258,9 +289,7 @@ private fun HomePage(
                         pair.forEach { (title, icon, target) ->
                             Tile(
                                 title, icon, Modifier.weight(1f),
-                                updateStatus = updateStatus.takeIf {
-                                    target == Page.UPDATES || target == Page.SETTINGS
-                                },
+                                updateStatus = updateStatus.takeIf { target == Page.UPDATES },
                             ) { open(target) }
                         }
                         if (pair.size == 1) Spacer(Modifier.weight(1f))

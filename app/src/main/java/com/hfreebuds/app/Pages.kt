@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.rounded.BluetoothDisabled
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SystemUpdate
@@ -405,10 +406,31 @@ fun WearPage(onBack: () -> Unit) {
 // ============================================================ Earbud settings
 
 @Composable
-fun EarbudSettingsPage(onBack: () -> Unit, openDual: () -> Unit, openUpdates: () -> Unit) {
+internal fun EarbudSettingsPage(
+    onBack: () -> Unit,
+    openDual: () -> Unit,
+    openUpdates: () -> Unit,
+    openSubpage: (Page) -> Unit,
+) {
     val s by Earbuds.state.collectAsState()
     val updaterState by LiveUpdater.controller.status.collectAsState()
-    PageScaffold("Earbud settings", onBack) {
+    PageScaffold("Settings", onBack) {
+        item { GroupLabel("Preferences and tools") }
+        listOf(
+            Triple("Gesture control", Icons.Rounded.TouchApp, Page.GESTURES),
+            Triple("Sound effects", Icons.Rounded.GraphicEq, Page.SOUND),
+            Triple("Wear detection", Icons.Rounded.Hearing, Page.WEAR),
+            Triple("Find Device", Icons.Rounded.LocationSearching, Page.FIND),
+            Triple("Connected devices", Icons.Rounded.Bluetooth, Page.DUAL),
+            Triple("Voice prompts language", Icons.Rounded.Language, Page.LANGUAGE),
+            Triple("Phone audio", Icons.Rounded.Headphones, Page.PHONE),
+            Triple("About", Icons.Rounded.Info, Page.ABOUT),
+            Triple("Connection log", Icons.Rounded.Article, Page.LOG),
+        ).forEach { (label, icon, destination) ->
+            item {
+                NavRow(0, 1, label, icon = icon) { openSubpage(destination) }
+            }
+        }
         item {
             Tile(
                 "About & updates",
@@ -732,7 +754,6 @@ fun UpdatesPage(onBack: () -> Unit) {
     PageScaffold(
         "About & updates",
         onBack,
-        titleContent = { dev.n2k02.updater.N2K02UpdateTitle() },
     ) {
         item {
             dev.n2k02.updater.N2K02UpdateScreen(

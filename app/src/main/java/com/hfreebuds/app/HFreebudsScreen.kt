@@ -6,7 +6,10 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Smartphone
@@ -76,6 +79,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -101,7 +106,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
-private enum class Page {
+internal enum class Page {
     HOME, GESTURES, SOUND, WEAR, SETTINGS, FIND, DUAL, LANGUAGE, PHONE, ABOUT, UPDATES, LOG
 }
 
@@ -114,10 +119,36 @@ fun HFreebudsScreen(
 ) {
     var page by rememberSaveable { mutableStateOf(Page.HOME) }
     var picking by remember { mutableStateOf(false) }
-    BackHandler(enabled = page != Page.HOME) { page = if (page == Page.DUAL) Page.SETTINGS else Page.HOME }
-    val back = { page = if (page == Page.DUAL) Page.SETTINGS else Page.HOME }
+    BackHandler(enabled = page != Page.HOME) {
+        page = if (page == Page.SETTINGS) Page.HOME else Page.SETTINGS
+    }
+    val back = { page = if (page == Page.SETTINGS) Page.HOME else Page.SETTINGS }
+    val updaterState by LiveUpdater.controller.status.collectAsState()
 
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = page == Page.HOME,
+                    onClick = { page = Page.HOME },
+                    icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
+                    label = { Text("Home") },
+                )
+                NavigationBarItem(
+                    selected = page != Page.HOME,
+                    onClick = { page = Page.SETTINGS },
+                    icon = {
+                        dev.n2k02.updater.N2K02UpdateBadgedIcon(updaterState) {
+                            Icon(Icons.Rounded.Settings, contentDescription = "Settings")
+                        }
+                    },
+                    label = { Text("Settings") },
+                )
+            }
+        },
+    ) { outerPadding ->
     AnimatedContent(
+        modifier = Modifier.fillMaxSize().padding(outerPadding),
         targetState = page,
         transitionSpec = {
             if (targetState == Page.HOME) {
@@ -136,7 +167,12 @@ fun HFreebudsScreen(
             Page.GESTURES -> GesturesPage(back)
             Page.SOUND -> SoundEffectsPage(back)
             Page.WEAR -> WearPage(back)
-            Page.SETTINGS -> EarbudSettingsPage(back, openDual = { page = Page.DUAL }, openUpdates = { page = Page.UPDATES })
+            Page.SETTINGS -> EarbudSettingsPage(
+                back,
+                openDual = { page = Page.DUAL },
+                openUpdates = { page = Page.UPDATES },
+                openSubpage = { page = it },
+            )
             Page.FIND -> FindPage(back)
             Page.DUAL -> DualPage(back)
             Page.LANGUAGE -> LanguagePage(back)
@@ -147,6 +183,7 @@ fun HFreebudsScreen(
         }
     }
 
+    }
     if (picking) DevicePicker(onDismiss = { picking = false }, onPick = { picking = false; onPick(it) })
 }
 
@@ -175,7 +212,7 @@ private fun HomePage(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Rounded.Settings, contentDescription = null,
+                        Icon(Icons.Rounded.Home, contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                         Text("Home", fontWeight = FontWeight.SemiBold)
                     }
@@ -213,7 +250,7 @@ private fun HomePage(
                         Button(onClick = onAskPermission) { Text("Allow") }
                     }
                 }
-                item { Tile("About & updates", Icons.Rounded.SystemUpdate, Modifier.fillMaxWidth(), updateStatus = updateStatus) { open(Page.UPDATES) } }
+                item { Tile("Settings", Icons.Rounded.Settings, Modifier.fillMaxWidth(), updateStatus = updateStatus) { open(Page.SETTINGS) } }
                 return@LazyColumn
             }
 
@@ -224,52 +261,11 @@ private fun HomePage(
                 // ---- SOUND
                 if (s.ancMode != null || s.eqPreset != null) item { GroupLabel("Sound") }
                 if (s.ancMode != null) item { NoiseCard(s) }
-                if (s.eqPreset != null) {
-                    val label = s.profile?.eqPresets?.firstOrNull { it.value == s.eqPreset }?.label
-                    item { NavRow(0, 1, "Sound effects", label, icon = Icons.Rounded.GraphicEq) { open(Page.SOUND) } }
-                }
-                // ---- INTERACTIONS
-                if (s.doubleTap != null || s.tripleTap != null || s.longTap != null || s.swipe != null) {
-                    item { GroupLabel("Interactions") }
-                    item { NavRow(0, 1, "Gesture control", icon = Icons.Rounded.TouchApp) { open(Page.GESTURES) } }
-                }
-                // ---- EAR FIT
-                if (s.autoPause != null) {
-                    item { GroupLabel("Ear fit") }
-                    item {
-                        NavRow(0, 1, "Wear detection", if (s.autoPause == true) "On" else "Off", icon = Icons.Rounded.Hearing) { open(Page.WEAR) }
-                    }
-                }
+
+
             }
 
-            // ---- MORE
-            item { GroupLabel("More") }
-            val tiles = buildList {
-                add(Triple("Find Device", Icons.Rounded.LocationOn, Page.FIND))
-                if (connected && (s.hdAudio != null || s.lowLatency != null || s.dualEnabled != null)) {
-                    add(Triple("Earbud settings", Icons.Rounded.Tune, Page.SETTINGS))
-                }
-                if (connected && s.languages != null) add(Triple("Voice prompts", Icons.Rounded.Language, Page.LANGUAGE))
-                add(Triple("Phone audio", Icons.Rounded.VolumeUp, Page.PHONE))
-                add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
-                add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
-                add(Triple("Connection log", Icons.Rounded.Subject, Page.LOG))
-            }
-            tiles.chunked(2).forEach { pair ->
-                item {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        pair.forEach { (title, icon, target) ->
-                            Tile(
-                                title, icon, Modifier.weight(1f),
-                                updateStatus = updateStatus.takeIf {
-                                    target == Page.UPDATES || target == Page.SETTINGS
-                                },
-                            ) { open(target) }
-                        }
-                        if (pair.size == 1) Spacer(Modifier.weight(1f))
-                    }
-                }
-            }
+            item { Tile("Settings", Icons.Rounded.Settings, Modifier.fillMaxWidth(), updateStatus = updateStatus) { open(Page.SETTINGS) } }
         }
     }
 }

@@ -28,6 +28,19 @@ class TileNavigationContractTest {
         assertTrue("Permission gate must retain direct update access", home.contains("Tile(\"About & updates\""))
     }
 
+    @Test fun bluetoothPickerAndQuitHaveLabelsBelowTheTopBar() {
+        val home = source("HFreebudsScreen.kt").substringAfter("private fun HomePage(")
+            .substringBefore("// ============================================================ hero")
+        val titleBar = home.substringAfter("TopAppBar(").substringBefore("scrollBehavior = scroll")
+        val content = home.substringAfter("LazyColumn(")
+        assertFalse("The Bluetooth picker should not be in the title bar", titleBar.contains("onClick = onChoose"))
+        assertFalse("Quit should not be in the title bar", titleBar.contains("finishAndRemoveTask()"))
+        assertTrue("The labeled Bluetooth picker belongs in Home content", content.contains("Text(\"Choose earbuds\")"))
+        assertTrue("The labeled Quit button belongs in Home content", content.contains("Text(\"Quit\")"))
+        assertTrue("Quit must retain its existing behavior", content.contains("activity?.finishAndRemoveTask()"))
+        assertTrue("Buttons should be positioned left and right", content.contains("horizontalArrangement = Arrangement.SpaceBetween"))
+    }
+
     @Test fun tileSubpagesHaveAnInAppBackAction() {
         val frame = source("UiKit.kt")
         assertTrue(frame.contains("IconButton(onClick = onBack)"))

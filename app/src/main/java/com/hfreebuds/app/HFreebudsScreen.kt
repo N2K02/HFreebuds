@@ -197,14 +197,7 @@ private fun HomePage(
                     }
                 },
                 actions = {
-                    if (hasPermission) {
-                        FilledTonalIconButton(onClick = onChoose) {
-                            Icon(Icons.Rounded.SwapHoriz, contentDescription = "Choose earbuds")
-                        }
-                    }
-                    FilledTonalIconButton(onClick = { activity?.finishAndRemoveTask() }) {
-                        Icon(Icons.Rounded.PowerSettingsNew, contentDescription = "Quit app")
-                    }
+                    // The top title bar is reserved for page identity and HFreebuds branding.
                     dev.n2k02.updater.N2K02AppIcon(Modifier.size(28.dp))
                     Text("HFreebuds", style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(start = 6.dp, end = 12.dp))
@@ -221,6 +214,25 @@ private fun HomePage(
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // Home-only controls: one labeled Bluetooth picker on the left and Quit on the right.
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FilledTonalButton(onClick = onChoose, enabled = hasPermission) {
+                        Icon(Icons.Rounded.Bluetooth, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text("Choose earbuds")
+                    }
+                    FilledTonalButton(onClick = { activity?.finishAndRemoveTask() }) {
+                        Icon(Icons.Rounded.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text("Quit")
+                    }
+                }
+            }
             if (!hasPermission) {
                 item {
                     Panel {

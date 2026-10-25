@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.BluetoothDisabled
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Refresh
@@ -404,9 +405,18 @@ fun WearPage(onBack: () -> Unit) {
 // ============================================================ Earbud settings
 
 @Composable
-fun EarbudSettingsPage(onBack: () -> Unit, openDual: () -> Unit) {
+fun EarbudSettingsPage(onBack: () -> Unit, openDual: () -> Unit, openUpdates: () -> Unit) {
     val s by Earbuds.state.collectAsState()
+    val updaterState by LiveUpdater.controller.status.collectAsState()
     PageScaffold("Earbud settings", onBack) {
+        item {
+            Tile(
+                "About & updates",
+                Icons.Rounded.SystemUpdate,
+                Modifier.fillMaxWidth(),
+                updateStatus = updaterState,
+            ) { openUpdates() }
+        }
         if (s.dualEnabled != null) {
             item { GroupLabel("Connect preference") }
             item {

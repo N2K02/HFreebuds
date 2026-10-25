@@ -175,7 +175,7 @@ private fun HomePage(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Rounded.Home, contentDescription = null,
+                        Icon(Icons.Rounded.Settings, contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                         Text("Home", fontWeight = FontWeight.SemiBold)
                     }

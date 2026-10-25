@@ -173,22 +173,25 @@ private fun HomePage(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        s.profile?.name ?: s.deviceName ?: "HFreebuds",
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(Icons.Rounded.Home, contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                        Text("Home", fontWeight = FontWeight.SemiBold)
+                    }
                 },
                 actions = {
                     if (hasPermission) {
-                        TextButton(onClick = onChoose) {
-                            Icon(Icons.Rounded.SwapHoriz, "Choose earbuds", modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.size(6.dp))
-                            Text("Choose your earbuds", maxLines = 1)
+                        FilledTonalIconButton(onClick = onChoose) {
+                            Icon(Icons.Rounded.SwapHoriz, contentDescription = "Choose earbuds")
                         }
                     }
                     FilledTonalIconButton(onClick = { activity?.finishAndRemoveTask() }) {
                         Icon(Icons.Rounded.PowerSettingsNew, contentDescription = "Quit app")
                     }
+                    dev.n2k02.updater.N2K02AppIcon(Modifier.size(28.dp))
+                    Text("HFreebuds", style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 6.dp, end = 12.dp))
                 },
                 scrollBehavior = scroll,
             )

@@ -732,7 +732,6 @@ fun UpdatesPage(onBack: () -> Unit) {
     PageScaffold(
         "About & updates",
         onBack,
-        titleContent = { dev.n2k02.updater.N2K02UpdateTitle() },
     ) {
         item {
             dev.n2k02.updater.N2K02UpdateScreen(

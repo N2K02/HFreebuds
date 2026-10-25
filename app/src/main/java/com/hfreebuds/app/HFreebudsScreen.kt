@@ -119,36 +119,16 @@ fun HFreebudsScreen(
 ) {
     var page by rememberSaveable { mutableStateOf(Page.HOME) }
     var picking by remember { mutableStateOf(false) }
-    BackHandler(enabled = page != Page.HOME) {
-        page = if (page == Page.SETTINGS) Page.HOME else Page.SETTINGS
+    var subpageFromSettings by rememberSaveable { mutableStateOf(false) }
+    val back: () -> Unit = {
+        val parent = if (page != Page.SETTINGS && subpageFromSettings) Page.SETTINGS else Page.HOME
+        page = parent
+        if (parent == Page.HOME) subpageFromSettings = false
     }
-    val back = { page = if (page == Page.SETTINGS) Page.HOME else Page.SETTINGS }
-    val updaterState by LiveUpdater.controller.status.collectAsState()
+    BackHandler(enabled = page != Page.HOME) { back() }
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = page == Page.HOME,
-                    onClick = { page = Page.HOME },
-                    icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
-                )
-                NavigationBarItem(
-                    selected = page != Page.HOME,
-                    onClick = { page = Page.SETTINGS },
-                    icon = {
-                        dev.n2k02.updater.N2K02UpdateBadgedIcon(updaterState) {
-                            Icon(Icons.Rounded.Settings, contentDescription = "Settings")
-                        }
-                    },
-                    label = { Text("Settings") },
-                )
-            }
-        },
-    ) { outerPadding ->
     AnimatedContent(
-        modifier = Modifier.fillMaxSize().padding(outerPadding),
+        modifier = Modifier.fillMaxSize(),
         targetState = page,
         transitionSpec = {
             if (targetState == Page.HOME) {
@@ -162,16 +142,16 @@ fun HFreebudsScreen(
         when (p) {
             Page.HOME -> HomePage(
                 hasPermission, onAskPermission, savedAddress, onPick,
-                onChoose = { picking = true }, open = { page = it },
+                onChoose = { picking = true }, open = { subpageFromSettings = false; page = it },
             )
             Page.GESTURES -> GesturesPage(back)
             Page.SOUND -> SoundEffectsPage(back)
             Page.WEAR -> WearPage(back)
             Page.SETTINGS -> EarbudSettingsPage(
                 back,
-                openDual = { page = Page.DUAL },
-                openUpdates = { page = Page.UPDATES },
-                openSubpage = { page = it },
+                openDual = { subpageFromSettings = true; page = Page.DUAL },
+                openUpdates = { subpageFromSettings = true; page = Page.UPDATES },
+                openSubpage = { subpageFromSettings = true; page = it },
             )
             Page.FIND -> FindPage(back)
             Page.DUAL -> DualPage(back)
@@ -183,7 +163,6 @@ fun HFreebudsScreen(
         }
     }
 
-    }
     if (picking) DevicePicker(onDismiss = { picking = false }, onPick = { picking = false; onPick(it) })
 }
 
@@ -250,7 +229,7 @@ private fun HomePage(
                         Button(onClick = onAskPermission) { Text("Allow") }
                     }
                 }
-                item { Tile("Settings", Icons.Rounded.Settings, Modifier.fillMaxWidth(), updateStatus = updateStatus) { open(Page.SETTINGS) } }
+                item { Tile("About & updates", Icons.Rounded.SystemUpdate, Modifier.fillMaxWidth(), updateStatus = updateStatus) { open(Page.UPDATES) } }
                 return@LazyColumn
             }
 
@@ -261,11 +240,52 @@ private fun HomePage(
                 // ---- SOUND
                 if (s.ancMode != null || s.eqPreset != null) item { GroupLabel("Sound") }
                 if (s.ancMode != null) item { NoiseCard(s) }
-
-
+                if (s.eqPreset != null) {
+                    val label = s.profile?.eqPresets?.firstOrNull { it.value == s.eqPreset }?.label
+                    item { NavRow(0, 1, "Sound effects", label, icon = Icons.Rounded.GraphicEq) { open(Page.SOUND) } }
+                }
+                // ---- INTERACTIONS
+                if (s.doubleTap != null || s.tripleTap != null || s.longTap != null || s.swipe != null) {
+                    item { GroupLabel("Interactions") }
+                    item { NavRow(0, 1, "Gesture control", icon = Icons.Rounded.TouchApp) { open(Page.GESTURES) } }
+                }
+                // ---- EAR FIT
+                if (s.autoPause != null) {
+                    item { GroupLabel("Ear fit") }
+                    item {
+                        NavRow(0, 1, "Wear detection", if (s.autoPause == true) "On" else "Off", icon = Icons.Rounded.Hearing) { open(Page.WEAR) }
+                    }
+                }
             }
 
-            item { Tile("Settings", Icons.Rounded.Settings, Modifier.fillMaxWidth(), updateStatus = updateStatus) { open(Page.SETTINGS) } }
+            // ---- MORE
+            item { GroupLabel("More") }
+            val tiles = buildList {
+                add(Triple("Find Device", Icons.Rounded.LocationOn, Page.FIND))
+                if (connected && (s.hdAudio != null || s.lowLatency != null || s.dualEnabled != null)) {
+                    add(Triple("Earbud settings", Icons.Rounded.Tune, Page.SETTINGS))
+                }
+                if (connected && s.languages != null) add(Triple("Voice prompts", Icons.Rounded.Language, Page.LANGUAGE))
+                add(Triple("Phone audio", Icons.Rounded.VolumeUp, Page.PHONE))
+                add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
+                add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
+                add(Triple("Connection log", Icons.Rounded.Subject, Page.LOG))
+            }
+            tiles.chunked(2).forEach { pair ->
+                item {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        pair.forEach { (title, icon, target) ->
+                            Tile(
+                                title, icon, Modifier.weight(1f),
+                                updateStatus = updateStatus.takeIf {
+                                    target == Page.UPDATES || target == Page.SETTINGS
+                                },
+                            ) { open(target) }
+                        }
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
         }
     }
 }

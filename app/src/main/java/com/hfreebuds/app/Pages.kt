@@ -728,31 +728,25 @@ fun AboutPage(onBack: () -> Unit) {
 
 @Composable
 fun UpdatesPage(onBack: () -> Unit) {
-    PageScaffold("About & updates", onBack) {
+    val experimental by LiveUpdater.experimentalEnabled.collectAsState()
+    PageScaffold(
+        "About & updates",
+        onBack,
+        titleContent = { dev.n2k02.updater.N2K02UpdateTitle() },
+    ) {
         item {
-            androidx.compose.material3.ListItem(
-                headlineContent = { Text("HFreebuds") },
-                supportingContent = { Text("Version " + BuildConfig.VERSION_NAME) },
-                leadingContent = { Icon(Icons.Rounded.Settings, null) },
+            dev.n2k02.updater.N2K02UpdateScreen(
+                controller = LiveUpdater.controller,
+                installGuard = LiveUpdater.installGuard,
+                experimentalEnabled = experimental,
+                onExperimentalEnabledChange = LiveUpdater::setExperimentalEnabled,
             )
         }
         item {
-            val experimentalEnabled by LiveUpdater.experimentalEnabled.collectAsState()
-            androidx.compose.material3.ListItem(
-                headlineContent = { Text("Experimental updates") },
-                supportingContent = { Text("Offer signed APKs from successful pull request builds. Test builds may have bugs.") },
-                trailingContent = {
-                    androidx.compose.material3.Switch(
-                        checked = experimentalEnabled,
-                        onCheckedChange = LiveUpdater::setExperimentalEnabled,
-                    )
-                },
+            Note(
+                "Earbud firmware updates aren't supported; use HUAWEI AI Life for those.",
+                Modifier.padding(horizontal = 12.dp),
             )
-        }
-        item { androidx.compose.material3.HorizontalDivider() }
-        item { UpdateCard() }
-        item {
-            Note("Earbud firmware updates aren't supported; use HUAWEI AI Life for those.", Modifier.padding(horizontal = 12.dp))
         }
     }
 }

@@ -136,7 +136,7 @@ fun HFreebudsScreen(
             Page.GESTURES -> GesturesPage(back)
             Page.SOUND -> SoundEffectsPage(back)
             Page.WEAR -> WearPage(back)
-            Page.SETTINGS -> EarbudSettingsPage(back, openDual = { page = Page.DUAL })
+            Page.SETTINGS -> EarbudSettingsPage(back, openDual = { page = Page.DUAL }, openUpdates = { page = Page.UPDATES })
             Page.FIND -> FindPage(back)
             Page.DUAL -> DualPage(back)
             Page.LANGUAGE -> LanguagePage(back)

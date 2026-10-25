@@ -289,9 +289,7 @@ private fun HomePage(
                         pair.forEach { (title, icon, target) ->
                             Tile(
                                 title, icon, Modifier.weight(1f),
-                                updateStatus = updateStatus.takeIf {
-                                    target == Page.UPDATES || target == Page.SETTINGS
-                                },
+                                updateStatus = updateStatus.takeIf { target == Page.UPDATES },
                             ) { open(target) }
                         }
                         if (pair.size == 1) Spacer(Modifier.weight(1f))

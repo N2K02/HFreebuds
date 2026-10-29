@@ -17,10 +17,17 @@ class UnifiedLogsContractTest {
         assertTrue(pages.contains("clearExtra = Earbuds::clearLog"))
         assertTrue(pages.contains("N2K02UnifiedLogsPage("))
         assertTrue(pages.contains("N2K02AppIcon"))
-        listOf("followLatest", "Text(\"Prev\")", "Text(\"Next\")",
-            "Text(\"Copy\")", "Text(\"Clear all\")", "Switch(checked = enabled").forEach {
+        listOf("followLatest", "Text(\"Prev\",", "Text(\"Next\",",
+            "Text(\"Copy\",", "Text(\"Clear all\",", "Switch(checked = enabled").forEach {
             assertTrue(it, logs.contains(it))
         }
         assertFalse(manifest.contains("LogsActivity"))
+        assertTrue(logs.contains("Icons.Filled.ContentCopy"))
+        assertTrue(logs.contains("Icons.Filled.DeleteSweep"))
+        assertTrue(logs.contains("Icons.AutoMirrored.Filled.KeyboardArrowLeft"))
+        assertTrue(logs.contains("Icons.AutoMirrored.Filled.KeyboardArrowRight"))
+        assertTrue(logs.contains("horizontalArrangement = Arrangement.SpaceBetween"))
+        assertFalse(logs.contains("Text(\"Back\")"))
+        assertFalse(logs.contains("onBack: () -> Unit"))
     }
 }

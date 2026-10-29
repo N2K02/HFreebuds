@@ -432,6 +432,12 @@ internal fun EarbudSettingsPage(
             }
         }
         item {
+            val logContext = androidx.compose.ui.platform.LocalContext.current
+            NavRow(0, 1, "Logs", icon = Icons.Rounded.Article) {
+                logContext.startActivity(android.content.Intent(logContext, com.hfreebuds.app.LogsActivity::class.java))
+            }
+        }
+        item {
             Tile(
                 "About & updates",
                 Icons.Rounded.SystemUpdate,

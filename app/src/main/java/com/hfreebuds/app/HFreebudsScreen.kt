@@ -226,7 +226,7 @@ private fun HomePage(
                         Spacer(Modifier.size(8.dp))
                         Text("Choose earbuds")
                     }
-                    FilledTonalButton(onClick = { activity?.finishAndRemoveTask() }) {
+                    FilledTonalButton(onClick = { FindTone.stop(); Earbuds.quit(); activity?.finishAndRemoveTask() }) {
                         Icon(Icons.Rounded.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(8.dp))
                         Text("Quit")

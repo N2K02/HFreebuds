@@ -58,7 +58,7 @@ import androidx.compose.material.icons.rounded.NoiseControlOff
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Subject
+import androidx.compose.material.icons.rounded.Article
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Tune
@@ -281,7 +281,7 @@ private fun HomePage(
                 add(Triple("Phone audio", Icons.Rounded.VolumeUp, Page.PHONE))
                 add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
                 add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
-                add(Triple("Logs", Icons.Rounded.Subject, Page.LOG))
+                add(Triple("Logs", Icons.Rounded.Article, Page.LOG))
             }
             tiles.chunked(2).forEach { pair ->
                 item {

@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -147,6 +148,12 @@ object Earbuds {
                         error = "Couldn't reach the earbuds. Make sure they're out of the case and connected to this phone.",
                     )
                 }
+                return@launch
+            }
+            // A cancelled connect can unblock after socket.close(): never resurrect
+            // a Bluetooth session once Quit has begun.
+            if (!currentCoroutineContext().isActive) {
+                runCatching { sock.close() }
                 return@launch
             }
             socket = sock

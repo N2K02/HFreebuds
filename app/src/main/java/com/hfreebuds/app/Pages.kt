@@ -425,16 +425,10 @@ internal fun EarbudSettingsPage(
             Triple("Voice prompts language", Icons.Rounded.Language, Page.LANGUAGE),
             Triple("Phone audio", Icons.Rounded.Headphones, Page.PHONE),
             Triple("About", Icons.Rounded.Info, Page.ABOUT),
-            Triple("Connection log", Icons.Rounded.Article, Page.LOG),
+            Triple("Logs", Icons.Rounded.Article, Page.LOG),
         ).forEach { (label, icon, destination) ->
             item {
                 NavRow(0, 1, label, icon = icon) { openSubpage(destination) }
-            }
-        }
-        item {
-            val logContext = androidx.compose.ui.platform.LocalContext.current
-            NavRow(0, 1, "Logs", icon = Icons.Rounded.Article) {
-                logContext.startActivity(android.content.Intent(logContext, com.hfreebuds.app.LogsActivity::class.java))
             }
         }
         item {
@@ -783,20 +777,37 @@ fun UpdatesPage(onBack: () -> Unit) {
 @Composable
 fun LogPage(onBack: () -> Unit) {
     val context = LocalContext.current
-    val lines by Earbuds.log.collectAsState()
-    PageScaffold("Connection log", onBack, actions = {
+    val connectionLines by Earbuds.log.collectAsState()
+    val enabled by AppLog.enabled.collectAsState()
+    val version by AppLog.version.collectAsState()
+    PageScaffold("Logs", onBack, actions = {
         IconButton(onClick = {
             context.getSystemService(ClipboardManager::class.java)
-                .setPrimaryClip(ClipData.newPlainText("HFreebuds log", lines.joinToString("\n")))
-        }) { Icon(Icons.Rounded.ContentCopy, "Copy log") }
+                .setPrimaryClip(ClipData.newPlainText("HFreebuds logs",
+                    AppLog.all() + "\n" + connectionLines.joinToString("\n")))
+        }) { Icon(Icons.Rounded.ContentCopy, "Copy logs") }
     }) {
-        item { Note("Packets sent to and received from the earbuds. Copy this if a setting doesn't work.", Modifier.padding(horizontal = 12.dp)) }
+        item { 
+            Panel {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Enable detailed logging", modifier = Modifier.weight(1f))
+                    androidx.compose.material3.Switch(checked = enabled, onCheckedChange = { AppLog.setEnabled(it) })
+                }
+                Text("Local private storage • 7 days • fatal crash capture always on")
+            }
+        }
+        item { NavRow(0, 1, "Clear all saved logs", icon = Icons.Rounded.Delete) { AppLog.clear() } }
         item {
             Panel {
                 Column(Modifier.heightIn(max = 560.dp).horizontalScroll(rememberScrollState())) {
-                    if (lines.isEmpty()) Text("Nothing yet.")
-                    lines.takeLast(80).forEach {
-                        Text(it, fontFamily = FontFamily.Monospace, fontSize = 11.sp, maxLines = 1)
+                    val saved = remember(version) { AppLog.slice(0, Int.MAX_VALUE) }
+                    if (saved.isEmpty()) Text("No saved diagnostic events.")
+                    saved.takeLast(300).forEach {
+                        Text(it, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    }
+                    Text("Connection events", style = MaterialTheme.typography.titleSmall)
+                    connectionLines.takeLast(80).forEach {
+                        Text(it, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
                     }
                 }
             }

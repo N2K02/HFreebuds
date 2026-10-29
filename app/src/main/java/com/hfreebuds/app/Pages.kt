@@ -806,7 +806,6 @@ fun LogPage(onBack: () -> Unit) {
         N2K02UnifiedLogsPage(
             modifier = Modifier.fillMaxWidth().fillMaxSize().padding(insets),
             appName = "HFreebuds",
-            onBack = onBack,
             extraLabel = "Earbud connection events",
             extraLines = connectionLines,
             clearExtra = Earbuds::clearLog,

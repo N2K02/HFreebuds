@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -177,6 +178,13 @@ object Earbuds {
             }
         }
         return null
+    }
+
+    /** Quit all app-owned asynchronous work before closing the activity. */
+    fun quit() {
+        screenOpen = false
+        disconnect()
+        scope.coroutineContext.cancelChildren()
     }
 
     fun disconnect() {

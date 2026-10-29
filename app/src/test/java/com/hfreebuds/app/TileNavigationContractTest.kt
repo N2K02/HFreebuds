@@ -21,7 +21,7 @@ class TileNavigationContractTest {
         assertFalse("HFreebuds must not have bottom navigation", screen.contains("NavigationBar {"))
         assertFalse("HFreebuds must not have bottom navigation items", screen.contains("NavigationBarItem("))
         assertTrue("Shortcut tiles must be shown in a two-column grid", home.contains("tiles.chunked(2)"))
-        for (label in listOf("Find Device", "Phone audio", "Updates", "About", "Connection log")) {
+        for (label in listOf("Find Device", "Phone audio", "Updates", "About", "Logs")) {
             assertTrue("Missing shortcut tile: $label", home.contains("\"$label\""))
         }
         assertTrue("Missing Earbud settings shortcut", home.contains("\"Earbud settings\""))
@@ -48,4 +48,18 @@ class TileNavigationContractTest {
         assertTrue(screen.contains("BackHandler(enabled = page != Page.HOME)"))
         assertTrue(screen.contains("open = { subpageFromSettings = false; page = it }"))
     }
+    @Test fun homeQuitCancelsBluetoothWorkBeforeActivityCloses() {
+        val root = "app/src/main/java/com/hfreebuds/app/"
+        fun source(name: String) = listOf(java.io.File(root + name),
+            java.io.File("../" + root + name)).first { it.isFile }.readText()
+        val home = source("HFreebudsScreen.kt")
+        val earbuds = source("Earbuds.kt")
+        assertTrue(home.contains("FindTone.stop(); Earbuds.quit(); activity?.finishAndRemoveTask()"))
+        assertTrue(earbuds.contains("fun quit()"))
+        assertTrue(earbuds.contains("scope.coroutineContext.cancelChildren()"))
+        assertTrue(earbuds.contains("connectingSocket?.close()"))
+        assertTrue(earbuds.contains("if (!currentCoroutineContext().isActive)"))
+        assertTrue(earbuds.contains("waiting.values.forEach { it.cancel() }"))
+    }
+
 }

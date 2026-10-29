@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -91,7 +93,11 @@ object Earbuds {
     private val _log = MutableStateFlow<List<String>>(emptyList())
     val log: StateFlow<List<String>> = _log
 
+    /** Clear only the session connection history, not the current Bluetooth state. */
+    fun clearLog() { _log.value = emptyList() }
+
     private var socket: BluetoothSocket? = null
+    @Volatile private var connectingSocket: BluetoothSocket? = null
     private var readerJob: Job? = null
     private var connectJob: Job? = null
     private val writeLock = Mutex()
@@ -144,6 +150,12 @@ object Earbuds {
                 }
                 return@launch
             }
+            // A cancelled connect can unblock after socket.close(): never resurrect
+            // a Bluetooth session once Quit has begun.
+            if (!currentCoroutineContext().isActive) {
+                runCatching { sock.close() }
+                return@launch
+            }
             socket = sock
             _state.update { it.copy(link = Link.CONNECTED, error = null) }
             log("Connected")
@@ -164,21 +176,34 @@ object Earbuds {
         )
         for ((label, make) in attempts) {
             val s = runCatching { make() }.getOrNull() ?: continue
+            connectingSocket = s
             try {
                 s.connect()
+                connectingSocket = null
                 log("Opened $label")
                 return s
             } catch (e: IOException) {
                 log("$label failed: ${e.message}")
                 runCatching { s.close() }
+            } finally {
+                if (connectingSocket === s) connectingSocket = null
             }
         }
         return null
     }
 
+    /** Quit all app-owned asynchronous work before closing the activity. */
+    fun quit() {
+        screenOpen = false
+        disconnect()
+        scope.coroutineContext.cancelChildren()
+    }
+
     fun disconnect() {
         connectJob?.cancel()
         readerJob?.cancel()
+        runCatching { connectingSocket?.close() }
+        connectingSocket = null
         runCatching { socket?.close() }
         socket = null
         waiting.values.forEach { it.cancel() }

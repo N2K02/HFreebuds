@@ -58,6 +58,7 @@ class TileNavigationContractTest {
         assertTrue(earbuds.contains("fun quit()"))
         assertTrue(earbuds.contains("scope.coroutineContext.cancelChildren()"))
         assertTrue(earbuds.contains("connectingSocket?.close()"))
+        assertTrue(earbuds.contains("if (!currentCoroutineContext().isActive)"))
         assertTrue(earbuds.contains("waiting.values.forEach { it.cancel() }"))
     }
 

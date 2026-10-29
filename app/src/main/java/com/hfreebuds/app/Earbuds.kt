@@ -96,6 +96,7 @@ object Earbuds {
     fun clearLog() { _log.value = emptyList() }
 
     private var socket: BluetoothSocket? = null
+    @Volatile private var connectingSocket: BluetoothSocket? = null
     private var readerJob: Job? = null
     private var connectJob: Job? = null
     private val writeLock = Mutex()
@@ -168,13 +169,17 @@ object Earbuds {
         )
         for ((label, make) in attempts) {
             val s = runCatching { make() }.getOrNull() ?: continue
+            connectingSocket = s
             try {
                 s.connect()
+                connectingSocket = null
                 log("Opened $label")
                 return s
             } catch (e: IOException) {
                 log("$label failed: ${e.message}")
                 runCatching { s.close() }
+            } finally {
+                if (connectingSocket === s) connectingSocket = null
             }
         }
         return null
@@ -190,6 +195,8 @@ object Earbuds {
     fun disconnect() {
         connectJob?.cancel()
         readerJob?.cancel()
+        runCatching { connectingSocket?.close() }
+        connectingSocket = null
         runCatching { socket?.close() }
         socket = null
         waiting.values.forEach { it.cancel() }

@@ -809,6 +809,7 @@ fun LogPage(onBack: () -> Unit) {
             onBack = onBack,
             extraLabel = "Earbud connection events",
             extraLines = connectionLines,
+            clearExtra = Earbuds::clearLog,
         )
     }
 }

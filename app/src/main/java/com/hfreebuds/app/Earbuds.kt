@@ -91,6 +91,9 @@ object Earbuds {
     private val _log = MutableStateFlow<List<String>>(emptyList())
     val log: StateFlow<List<String>> = _log
 
+    /** Clear only the session connection history, not the current Bluetooth state. */
+    fun clearLog() { _log.value = emptyList() }
+
     private var socket: BluetoothSocket? = null
     private var readerJob: Job? = null
     private var connectJob: Job? = null

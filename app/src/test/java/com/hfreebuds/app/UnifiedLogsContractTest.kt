@@ -14,6 +14,7 @@ class UnifiedLogsContractTest {
         assertTrue(ui.contains("Page.LOG -> LogPage(back)"))
         assertTrue(ui.contains("Triple(\"Logs\", Icons.Rounded.Subject, Page.LOG)"))
         assertTrue(pages.contains("extraLines = connectionLines"))
+        assertTrue(pages.contains("clearExtra = Earbuds::clearLog"))
         assertTrue(pages.contains("N2K02UnifiedLogsPage("))
         assertTrue(pages.contains("N2K02AppIcon"))
         listOf("followLatest", "Text(\"Prev\")", "Text(\"Next\")",

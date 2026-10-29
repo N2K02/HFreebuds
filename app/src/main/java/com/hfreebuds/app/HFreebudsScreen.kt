@@ -281,7 +281,7 @@ private fun HomePage(
                 add(Triple("Phone audio", Icons.Rounded.VolumeUp, Page.PHONE))
                 add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
                 add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
-                add(Triple("Connection log", Icons.Rounded.Subject, Page.LOG))
+                add(Triple("Logs", Icons.Rounded.Subject, Page.LOG))
             }
             tiles.chunked(2).forEach { pair ->
                 item {

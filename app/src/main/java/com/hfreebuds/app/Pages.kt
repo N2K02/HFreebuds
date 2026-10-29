@@ -772,45 +772,42 @@ fun UpdatesPage(onBack: () -> Unit) {
     }
 }
 
-// ============================================================ Connection log
+// ============================================================ logs
 
+/** Logs is part of the existing HFreebuds tile navigation, without a second standalone Activity. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun LogPage(onBack: () -> Unit) {
-    val context = LocalContext.current
     val connectionLines by Earbuds.log.collectAsState()
-    val enabled by AppLog.enabled.collectAsState()
-    val version by AppLog.version.collectAsState()
-    PageScaffold("Logs", onBack, actions = {
-        IconButton(onClick = {
-            context.getSystemService(ClipboardManager::class.java)
-                .setPrimaryClip(ClipData.newPlainText("HFreebuds logs",
-                    AppLog.all() + "\n" + connectionLines.joinToString("\n")))
-        }) { Icon(Icons.Rounded.ContentCopy, "Copy logs") }
-    }) {
-        item { 
-            Panel {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Enable detailed logging", modifier = Modifier.weight(1f))
-                    androidx.compose.material3.Switch(checked = enabled, onCheckedChange = { AppLog.setEnabled(it) })
-                }
-                Text("Local private storage • 7 days • fatal crash capture always on")
-            }
-        }
-        item { NavRow(0, 1, "Clear all saved logs", icon = Icons.Rounded.Delete) { AppLog.clear() } }
-        item {
-            Panel {
-                Column(Modifier.heightIn(max = 560.dp).horizontalScroll(rememberScrollState())) {
-                    val saved = remember(version) { AppLog.slice(0, Int.MAX_VALUE) }
-                    if (saved.isEmpty()) Text("No saved diagnostic events.")
-                    saved.takeLast(300).forEach {
-                        Text(it, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+    androidx.compose.material3.Scaffold(
+        topBar = {
+            androidx.compose.material3.TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
                     }
-                    Text("Connection events", style = MaterialTheme.typography.titleSmall)
-                    connectionLines.takeLast(80).forEach {
-                        Text(it, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(Icons.Rounded.Article, contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                        Text("Logs", style = MaterialTheme.typography.titleLarge)
                     }
-                }
-            }
-        }
+                },
+                actions = {
+                    dev.n2k02.updater.N2K02AppIcon(Modifier.size(28.dp))
+                    Text("HFreebuds", style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 6.dp, end = 12.dp))
+                },
+            )
+        },
+    ) { insets ->
+        N2K02UnifiedLogsPage(
+            modifier = Modifier.fillMaxWidth().fillMaxSize().padding(insets),
+            appName = "HFreebuds",
+            onBack = onBack,
+            extraLabel = "Earbud connection events",
+            extraLines = connectionLines,
+        )
     }
 }

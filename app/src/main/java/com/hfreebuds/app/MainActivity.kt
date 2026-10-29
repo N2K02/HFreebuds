@@ -54,6 +54,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         LiveUpdater.init(this)
         Earbuds.init(this)
+        AppLog.init(applicationContext)
         hasPermission.value = checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
         setContent {
             HFreebudsTheme {

@@ -12,7 +12,7 @@ class UnifiedLogsContractTest {
         val logs = read("app/src/main/java/com/hfreebuds/app/UnifiedLogsPage.kt")
         val manifest = read("app/src/main/AndroidManifest.xml")
         assertTrue(ui.contains("Page.LOG -> LogPage(back)"))
-        assertTrue(ui.contains("Triple(\"Logs\", Icons.Rounded.Subject, Page.LOG)"))
+        assertTrue(ui.contains("Triple(\"Logs\", Icons.Rounded.Article, Page.LOG)"))
         assertTrue(pages.contains("extraLines = connectionLines"))
         assertTrue(pages.contains("clearExtra = Earbuds::clearLog"))
         assertTrue(pages.contains("N2K02UnifiedLogsPage("))
@@ -29,5 +29,7 @@ class UnifiedLogsContractTest {
         assertTrue(logs.contains("horizontalArrangement = Arrangement.SpaceBetween"))
         assertFalse(logs.contains("Text(\"Back\")"))
         assertFalse(logs.contains("onBack: () -> Unit"))
+        assertTrue(pages.contains("Triple(\"Logs\", Icons.Rounded.Article, Page.LOG)"))
+        assertTrue(pages.contains("Icon(Icons.Rounded.Article, contentDescription = null,"))
     }
 }

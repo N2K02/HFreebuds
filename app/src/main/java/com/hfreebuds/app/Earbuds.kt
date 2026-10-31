@@ -89,12 +89,6 @@ object Earbuds {
     private val _state = MutableStateFlow(EarbudsState())
     val state: StateFlow<EarbudsState> = _state
 
-    /** Last packets in and out, for the Log card (newest last). */
-    private val _log = MutableStateFlow<List<String>>(emptyList())
-    val log: StateFlow<List<String>> = _log
-
-    /** Clear only the session connection history, not the current Bluetooth state. */
-    fun clearLog() { _log.value = emptyList() }
 
     private var socket: BluetoothSocket? = null
     @Volatile private var connectingSocket: BluetoothSocket? = null
@@ -111,8 +105,7 @@ object Earbuds {
     }
 
     private fun log(line: String) {
-        val t = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
-        _log.update { (it + "$t  $line").takeLast(150) }
+        AppLog.add("BT", line)
     }
 
     val isConnected get() = _state.value.link == Link.CONNECTED

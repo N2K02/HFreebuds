@@ -17,7 +17,6 @@
         android:icon="@mipmap/ic_launcher"
         android:label="HFreebuds"
         android:theme="@style/Theme.HFreebuds">
-        <provider android:name="com.hfreebuds.app.CrashJournalProvider" android:authorities="${applicationId}.crashjournal" android:exported="false" android:initOrder="100" />
 
 
         <activity

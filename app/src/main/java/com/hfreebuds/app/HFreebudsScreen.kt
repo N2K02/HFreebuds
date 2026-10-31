@@ -107,7 +107,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 internal enum class Page {
-    HOME, GESTURES, SOUND, WEAR, SETTINGS, FIND, DUAL, LANGUAGE, PHONE, ABOUT, UPDATES, LOG
+    HOME, GESTURES, SOUND, WEAR, SETTINGS, FIND, DUAL, LANGUAGE, PHONE, ABOUT , UPDATES
 }
 
 @Composable
@@ -159,7 +159,6 @@ fun HFreebudsScreen(
             Page.PHONE -> PhoneAudioPage(back)
             Page.ABOUT -> AboutPage(back)
             Page.UPDATES -> UpdatesPage(back)
-            Page.LOG -> LogPage(back)
         }
     }
 
@@ -281,7 +280,6 @@ private fun HomePage(
                 add(Triple("Phone audio", Icons.Rounded.VolumeUp, Page.PHONE))
                 add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
                 add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
-                add(Triple("Logs", Icons.Rounded.Article, Page.LOG))
             }
             tiles.chunked(2).forEach { pair ->
                 item {

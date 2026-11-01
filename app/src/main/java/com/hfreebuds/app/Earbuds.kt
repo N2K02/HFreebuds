@@ -2,6 +2,7 @@ package com.hfreebuds.app
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import android.util.Log
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
@@ -217,7 +218,9 @@ object Earbuds {
                 if (n < 0) break
                 for (frame in reader.feed(buf, n)) {
                     val pkt = HuaweiPacket.parse(frame) ?: continue
-                    log("← $pkt")
+                    // Raw packet formatting/redaction is expensive under bursty Bluetooth traffic.
+                    // Keep diagnostic packet dumps opt-in; connection errors remain visible.
+                    if (Log.isLoggable("HFreebuds-BT", Log.VERBOSE)) log("← $pkt")
                     handle(pkt)
                     waiting.remove(pkt.command)?.complete(pkt)
                 }
@@ -238,7 +241,7 @@ object Earbuds {
                 out.write(bytes)
                 out.flush()
             }
-            log("→ $label")
+            if (Log.isLoggable("HFreebuds-BT", Log.VERBOSE)) log("→ $label")
             true
         } catch (e: IOException) {
             log("Send failed: ${e.message}")

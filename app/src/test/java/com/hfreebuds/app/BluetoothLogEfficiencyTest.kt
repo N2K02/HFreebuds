@@ -11,8 +11,8 @@ class BluetoothLogEfficiencyTest {
             File("app/src/main/java/com/hfreebuds/app/Earbuds.kt")
         ).first { it.exists() }
         val code = file.readText()
-        assertTrue(code.contains("if (Log.isLoggable(\"HFreebuds-BT\", Log.VERBOSE)) log(\"← $pkt\")"))
-        assertTrue(code.contains("if (Log.isLoggable(\"HFreebuds-BT\", Log.VERBOSE)) log(\"→ $label\")"))
+        assertTrue(code.contains("if (Log.isLoggable(\"HFreebuds-BT\", Log.VERBOSE)) log(\"← \$pkt\")"))
+        assertTrue(code.contains("if (Log.isLoggable(\"HFreebuds-BT\", Log.VERBOSE)) log(\"→ \$label\")"))
         assertTrue(code.contains("log(\"Link closed:"))
         assertTrue(code.contains("log(\"Send failed:"))
     }

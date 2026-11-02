@@ -46,12 +46,12 @@ android {
 
 dependencies {
     // Material 3 Expressive (MaterialExpressiveTheme, expressive shapes/motion/components)
-    implementation("androidx.compose.material3:material3:1.5.0-beta01")
+    implementation("androidx.compose.material3:material3:1.5.0-beta02")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    implementation("androidx.graphics:graphics-shapes:1.0.1")
+    implementation("androidx.graphics:graphics-shapes:1.1.0")
     implementation("androidx.activity:activity-compose:1.11.0")
-    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:4.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     testImplementation("junit:junit:4.13.2")
 }

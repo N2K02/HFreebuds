@@ -150,8 +150,6 @@ fun HFreebudsScreen(
             Page.SETTINGS -> EarbudSettingsPage(
                 back,
                 openDual = { subpageFromSettings = true; page = Page.DUAL },
-                openUpdates = { subpageFromSettings = true; page = Page.UPDATES },
-                openSubpage = { subpageFromSettings = true; page = it },
             )
             Page.FIND -> FindPage(back)
             Page.DUAL -> DualPage(back)

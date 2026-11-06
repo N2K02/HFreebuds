@@ -410,35 +410,9 @@ fun WearPage(onBack: () -> Unit) {
 internal fun EarbudSettingsPage(
     onBack: () -> Unit,
     openDual: () -> Unit,
-    openUpdates: () -> Unit,
-    openSubpage: (Page) -> Unit,
 ) {
     val s by Earbuds.state.collectAsState()
-    val updaterState by LiveUpdater.controller.status.collectAsState()
-    PageScaffold("Settings", onBack) {
-        item { GroupLabel("Preferences and tools") }
-        listOf(
-            Triple("Gesture control", Icons.Rounded.TouchApp, Page.GESTURES),
-            Triple("Sound effects", Icons.Rounded.GraphicEq, Page.SOUND),
-            Triple("Wear detection", Icons.Rounded.Hearing, Page.WEAR),
-            Triple("Find Device", Icons.Rounded.LocationSearching, Page.FIND),
-            Triple("Connected devices", Icons.Rounded.Bluetooth, Page.DUAL),
-            Triple("Voice prompts language", Icons.Rounded.Language, Page.LANGUAGE),
-            Triple("Phone audio", Icons.Rounded.Headphones, Page.PHONE),
-            Triple("About", Icons.Rounded.Info, Page.ABOUT),
-        ).forEach { (label, icon, destination) ->
-            item {
-                NavRow(0, 1, label, icon = icon) { openSubpage(destination) }
-            }
-        }
-        item {
-            Tile(
-                "About & updates",
-                Icons.Rounded.SystemUpdate,
-                Modifier.fillMaxWidth(),
-                updateStatus = updaterState,
-            ) { openUpdates() }
-        }
+    PageScaffold("Earbud settings", onBack) {
         if (s.dualEnabled != null) {
             item { GroupLabel("Connect preference") }
             item {
@@ -456,7 +430,7 @@ internal fun EarbudSettingsPage(
             item { Untested(s, "dual") }
         }
         if (s.hdAudio != null) {
-            item { GroupLabel("Sound quality") }
+            item { GroupLabel("Sound quality / HD audio") }
             item {
                 RadioItem(0, 2, "Prioritize connection quality", "Balance connection stability with sound quality.", s.hdAudio == false) {
                     Earbuds.setHdAudio(false)

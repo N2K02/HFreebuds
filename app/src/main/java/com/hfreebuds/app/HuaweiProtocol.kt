@@ -162,6 +162,8 @@ object Cmd {
     const val DUAL_PREFERRED = 0x2B32
     const val DUAL_EXECUTE = 0x2B33
     const val DUAL_CHANGED = 0x2B36
+    const val HD_CALLS_WRITE = 0x2B45
+    const val HD_CALLS_REPORT = 0x2B46
     const val EQ_WRITE = 0x2B49
     const val EQ_READ = 0x2B4A
     const val LOW_LATENCY = 0x2B6C
@@ -172,3 +174,13 @@ object Cmd {
 internal fun Byte.u8() = toInt() and 0xFF
 internal fun ByteArray.hex() = joinToString("") { "%02X".format(it) }
 internal fun String.unhex(): ByteArray = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+
+/** FreeBuds 5 HD calls frames confirmed by AI Life capture. */
+internal object HdCallsProtocol {
+    fun set(enabled: Boolean) = HuaweiPacket.write(Cmd.HD_CALLS_WRITE, 1 to enabled)
+    fun reported(packet: HuaweiPacket): Boolean? = if (packet.command != Cmd.HD_CALLS_REPORT) null else when (packet.byte(1)) {
+        0 -> false
+        1 -> true
+        else -> null
+    }
+}

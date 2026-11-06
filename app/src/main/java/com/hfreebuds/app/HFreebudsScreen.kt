@@ -1,9 +1,6 @@
 package com.hfreebuds.app
 
 import android.annotation.SuppressLint
-import android.graphics.BitmapFactory
-import java.net.HttpURLConnection
-import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.Image
@@ -306,49 +303,20 @@ private fun HomePage(
     }
 }
 
-// Huawei's official FreeBuds 5 image. Other models stay hidden until an exact image is verified.
-private fun huaweiProductImageUrl(profile: DeviceProfile?): String? =
-    when (profile) {
-        DeviceProfile.FREEBUDS_5 -> "https://consumer.huawei.com/dam/content/dam/huawei-cbg-site/common/mkt/pdp/headphones/freebuds5/imgs/huawei-freebuds-5-adaptive-eq.jpg"
-        else -> null
-    }
-
 @Composable
 private fun HuaweiProductImage(s: EarbudsState) {
-    val imageUrl = huaweiProductImageUrl(s.profile)
-    val bitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(initialValue = null, key1 = imageUrl) {
+    val context = LocalContext.current
+    val identity = s.productIdentity
+    val bitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(initialValue = null, key1 = identity, key2 = s.address) {
         value = null
-        if (imageUrl != null) value = withContext(Dispatchers.IO) {
-            runCatching {
-                val connection = URL(imageUrl).openConnection() as HttpURLConnection
-                try {
-                    connection.connectTimeout = 5000
-                    connection.readTimeout = 5000
-                    connection.instanceFollowRedirects = false
-                    if (connection.responseCode != HttpURLConnection.HTTP_OK) return@runCatching null
-                    if (connection.contentLengthLong > 4_000_000) return@runCatching null
-                    val bytes = connection.inputStream.use { stream ->
-                        val output = java.io.ByteArrayOutputStream()
-                        val buffer = ByteArray(8192)
-                        while (true) {
-                            val n = stream.read(buffer)
-                            if (n < 0) break
-                            if (output.size() + n > 4_000_000) return@runCatching null
-                            output.write(buffer, 0, n)
-                        }
-                        output.toByteArray()
-                    }
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-                } finally {
-                    connection.disconnect()
-                }
-            }.getOrNull()
+        if (identity != null) value = withContext(Dispatchers.IO) {
+            OfficialProductImages.load(context.cacheDir, identity)?.asImageBitmap()
         }
     }
     bitmap?.let {
         Image(
             bitmap = it,
-            contentDescription = s.profile?.name,
+            contentDescription = s.profile?.name ?: s.deviceName,
             contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxWidth().height(200.dp),
         )

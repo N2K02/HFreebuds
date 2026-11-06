@@ -316,7 +316,7 @@ private fun huaweiProductImageUrl(profile: DeviceProfile?): String? =
 @Composable
 private fun HuaweiProductImage(s: EarbudsState) {
     val imageUrl = huaweiProductImageUrl(s.profile)
-    val bitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(initialValue = null, imageUrl) {
+    val bitmap by produceState<androidx.compose.ui.graphics.ImageBitmap?>(initialValue = null, key1 = imageUrl) {
         value = null
         if (imageUrl != null) value = withContext(Dispatchers.IO) {
             runCatching {

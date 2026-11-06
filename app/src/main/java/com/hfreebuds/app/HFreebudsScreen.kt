@@ -278,7 +278,7 @@ private fun HomePage(
             item { GroupLabel("More") }
             val tiles = buildList {
                 add(Triple("Find Device", Icons.Rounded.LocationOn, Page.FIND))
-                if (connected && (s.hdAudio != null || s.lowLatency != null || s.dualEnabled != null)) {
+                if (connected && (s.hdAudio != null || s.lowLatency != null || s.dualEnabled != null || s.profile == DeviceProfile.FREEBUDS_5)) {
                     add(Triple("Earbud settings", Icons.Rounded.Tune, Page.SETTINGS))
                 }
                 if (connected && s.languages != null) add(Triple("Voice prompts", Icons.Rounded.Language, Page.LANGUAGE))

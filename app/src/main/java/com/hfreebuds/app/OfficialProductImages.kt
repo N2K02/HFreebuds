@@ -11,7 +11,7 @@ import java.net.URL
 import java.util.zip.ZipInputStream
 
 /** Identity is accepted only when all independently reported model fields agree. */
-internal data class ProductIdentity(val model: String, val colour: String) {
+data class ProductIdentity(val model: String, val colour: String) {
     companion object {
         fun fromPacket(packet: HuaweiPacket): ProductIdentity? {
             if (packet.command != Cmd.DEVICE_INFO) return null

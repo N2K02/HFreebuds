@@ -301,6 +301,10 @@ private fun HomePage(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun Hero(s: EarbudsState, onChoose: () -> Unit, onRetry: () -> Unit) {
+    if (s.link == Link.CONNECTED) {
+        ConnectedCard(s)
+        return
+    }
     val title = when (s.link) {
         Link.CONNECTED -> "Connected"
         Link.CONNECTING -> "Connecting…"
@@ -329,21 +333,6 @@ private fun Hero(s: EarbudsState, onChoose: () -> Unit, onRetry: () -> Unit) {
                     (s.profile?.name ?: s.deviceName)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 }
                 if (s.link == Link.CONNECTING) LoadingIndicator(Modifier.size(36.dp))
-                else if (s.link == Link.CONNECTED) IconButton(onClick = { Earbuds.refreshAll() }) { Icon(Icons.Rounded.Refresh, "Refresh") }
-            }
-            if (s.link == Link.CONNECTED) {
-                s.battery?.let { b ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        if (s.profile?.tws != false) {
-                            BatteryDial("L", b.left, b.leftCharging)
-                            BatteryDial("R", b.right, b.rightCharging)
-                            BatteryDial("Case", b.case, b.caseCharging)
-                        } else {
-                            BatteryDial("Battery", b.global, b.leftCharging || b.caseCharging)
-                        }
-                    }
-                }
-                s.inEar?.let { Text(if (it) "In your ears" else "Not in your ears", style = MaterialTheme.typography.bodySmall) }
             }
             if (s.profile?.keys?.isEmpty() == true) {
                 Text("Model not in the list: HFreebuds shows whatever these earbuds answer to.", style = MaterialTheme.typography.bodySmall)
@@ -359,20 +348,48 @@ private fun Hero(s: EarbudsState, onChoose: () -> Unit, onRetry: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun BatteryDial(label: String, level: Int?, charging: Boolean) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(68.dp)) {
-            CircularWavyProgressIndicator(progress = { (level ?: 0) / 100f }, modifier = Modifier.size(68.dp))
-            Text(
-                level?.let { "$it%" } ?: "—",
-                style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
-            )
+private fun ConnectedCard(s: EarbudsState) {
+    val battery = s.battery
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(28.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Connected", modifier = Modifier.weight(1.1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+                if (s.profile?.tws != false) {
+                    CompactBattery("L", battery?.left, battery?.leftCharging == true, Modifier.weight(0.8f))
+                    CompactBattery("R", battery?.right, battery?.rightCharging == true, Modifier.weight(0.8f))
+                    CompactBattery("Case", battery?.case, battery?.caseCharging == true, Modifier.weight(0.8f))
+                } else {
+                    CompactBattery("Battery", battery?.global, battery?.leftCharging == true || battery?.caseCharging == true, Modifier.weight(1f))
+                }
+            }
+            s.inEar?.let {
+                Text(
+                    if (it) "In your ears" else "Not in your ears",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
         }
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-            if (charging) Icon(Icons.Rounded.Bolt, "Charging", Modifier.size(16.dp))
-            Text(label, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+@Composable
+private fun CompactBattery(label: String, level: Int?, charging: Boolean, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(level?.let { "$it%" } ?: "—", style = MaterialTheme.typography.bodyLarge, maxLines = 1)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            if (charging) Icon(Icons.Rounded.Bolt, contentDescription = "Charging", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

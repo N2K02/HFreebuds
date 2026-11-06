@@ -313,13 +313,15 @@ private fun HuaweiProductImage(s: EarbudsState) {
             OfficialProductImages.load(context.cacheDir, identity)?.asImageBitmap()
         }
     }
-    bitmap?.let {
+    if (bitmap != null) {
         Image(
-            bitmap = it,
+            bitmap = bitmap!!,
             contentDescription = s.profile?.name ?: s.deviceName,
             contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxWidth().height(200.dp),
         )
+    } else {
+        EarbudDiagram(TouchSpot.NONE, modifier = Modifier.fillMaxWidth())
     }
 }
 

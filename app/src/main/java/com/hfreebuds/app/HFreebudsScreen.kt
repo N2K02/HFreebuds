@@ -363,6 +363,9 @@ private fun ConnectedCard(s: EarbudsState) {
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
+                IconButton(onClick = { Earbuds.refreshAll() }, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Rounded.Refresh, contentDescription = "Refresh", modifier = Modifier.size(18.dp))
+                }
                 if (s.profile?.tws != false) {
                     CompactBattery("L", battery?.left, battery?.leftCharging == true, Modifier.weight(0.8f))
                     CompactBattery("R", battery?.right, battery?.rightCharging == true, Modifier.weight(0.8f))

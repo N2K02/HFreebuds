@@ -14,7 +14,8 @@ Laid out like the official app, in Material 3 Expressive: a home screen with **S
 
 | | |
 | --- | --- |
-| **Battery** | Left, right and case, with charging status; whether the earbuds are in your ears |\n| **Product image** | Retrieves and caches Huawei's model and colour image when the connected earbuds report a verified identity; otherwise a generic illustration is shown |
+| **Battery** | Left, right and case, with charging status; whether the earbuds are in your ears |
+| **Product image** | Retrieves and caches Huawei's model and colour image when the connected earbuds report a verified identity; otherwise a generic illustration is shown |
 | **Noise control** | Off / Noise cancelling / Awareness (models that have it), with strength levels: Smart, Light, Balanced (and Deep where available) |
 | **Sound** | Equalizer presets (Default, Bass boost, Treble boost, Voices), **HD audio** (sound quality first, LDAC) or connection first, **Low latency** |
 | **Gestures** | Double-tap, triple-tap, press and hold (and which noise modes it cycles), swipe: each **left and right** separately, plus during calls |

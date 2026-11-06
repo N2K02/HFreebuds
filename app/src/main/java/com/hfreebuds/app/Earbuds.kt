@@ -63,6 +63,8 @@ data class EarbudsState(
     val autoPause: Boolean? = null,
     /** true = sound quality first (HD / LDAC), false = connection first. */
     val hdAudio: Boolean? = null,
+    val hdCalls: Boolean? = null,
+    val hdCallsPending: Boolean = false,
     val lowLatency: Boolean? = null,
     val eqPreset: Int? = null,
     val eqAvailable: List<Int>? = null,
@@ -204,7 +206,7 @@ object Earbuds {
         waiting.values.forEach { it.cancel() }
         waiting.clear()
         if (_state.value.link != Link.DISCONNECTED) {
-            _state.update { it.copy(link = Link.DISCONNECTED) }
+            _state.update { it.copy(link = Link.DISCONNECTED, hdCalls = null, hdCallsPending = false) }
             log("Disconnected")
         }
     }
@@ -231,7 +233,7 @@ object Earbuds {
         }
         if (socket === sock) {
             socket = null
-            _state.update { it.copy(link = Link.DISCONNECTED, error = "The earbuds disconnected.") }
+            _state.update { it.copy(link = Link.DISCONNECTED, hdCalls = null, hdCallsPending = false, error = "The earbuds disconnected.") }
         }
     }
 
@@ -343,6 +345,7 @@ object Earbuds {
             }
             Cmd.AUTO_PAUSE_READ -> p.byte(1)?.let { v -> _state.update { it.copy(autoPause = v == 1) } }
             Cmd.QUALITY_READ -> p.byte(2)?.let { v -> _state.update { it.copy(hdAudio = v == 1) } }
+            Cmd.HD_CALLS_REPORT -> HdCallsProtocol.reported(p)?.let { value -> _state.update { it.copy(hdCalls = value) } }
             Cmd.LOW_LATENCY -> p.byte(2)?.let { v -> _state.update { it.copy(lowLatency = v == 1) } }
             Cmd.EQ_READ -> _state.update { s ->
                 s.copy(
@@ -432,6 +435,22 @@ object Earbuds {
     fun setAutoPause(on: Boolean) {
         _state.update { it.copy(autoPause = on) }
         write(HuaweiPacket.write(Cmd.AUTO_PAUSE_WRITE, 1 to on)) { read(Cmd.AUTO_PAUSE_READ, 1) }
+    }
+
+    /** No startup query was observed; only the earbud's 2B46 report confirms the state. */
+    fun setHdCalls(enabled: Boolean) {
+        val before = _state.value
+        if (before.link != Link.CONNECTED || before.profile != DeviceProfile.FREEBUDS_5 || before.hdCallsPending) return
+        _state.update { it.copy(hdCalls = null, hdCallsPending = true) }
+        scope.launch {
+            try {
+                request(HdCallsProtocol.set(enabled), answer = Cmd.HD_CALLS_REPORT)
+            } finally {
+                _state.update { current ->
+                    if (current.address == before.address) current.copy(hdCallsPending = false) else current
+                }
+            }
+        }
     }
 
     fun setHdAudio(on: Boolean) {

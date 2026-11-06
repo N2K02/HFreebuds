@@ -77,6 +77,7 @@ data class EarbudsState(
     val dualEnabled: Boolean? = null,
     val dualDevices: List<DualDevice>? = null,
     val info: DeviceInfo? = null,
+    val productIdentity: ProductIdentity? = null,
 )
 
 /**
@@ -398,6 +399,7 @@ object Earbuds {
                 }
                 _state.update {
                     it.copy(
+                        productIdentity = ProductIdentity.fromPacket(p),
                         info = DeviceInfo(
                             model = str(15), subModel = str(10), hardware = str(3), firmware = str(7),
                             serial = str(9), leftSerial = ls, rightSerial = rs,

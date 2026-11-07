@@ -217,8 +217,8 @@ fun NavRow(
 }
 
 @Composable
-fun SwitchItem(index: Int, count: Int, title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Segment(index, count, onClick = { onChange(!checked) }, role = Role.Switch) {
+fun SwitchItem(index: Int, count: Int, title: String, subtitle: String?, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+    Segment(index, count, onClick = { onChange(!checked) }, role = Role.Switch, enabled = enabled) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
@@ -227,7 +227,7 @@ fun SwitchItem(index: Int, count: Int, title: String, subtitle: String?, checked
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 subtitle?.let { Note(it) }
             }
-            Switch(checked = checked, onCheckedChange = null)
+            Switch(checked = checked, onCheckedChange = null, enabled = enabled)
         }
     }
 }

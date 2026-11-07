@@ -184,3 +184,11 @@ internal object HdCallsProtocol {
         else -> null
     }
 }
+
+/** Prefer British or US English, otherwise use an advertised English locale. */
+internal fun chooseEnglishVoiceLanguage(languages: List<String>): String? {
+    val candidates = languages.map { it.trim() }
+        .filter { it.matches(Regex("(?i)^en(?:[-_][a-z0-9]+)*$")) }
+    return candidates.firstOrNull { it.equals("en-GB", true) || it.equals("en-US", true) }
+        ?: candidates.firstOrNull()
+}

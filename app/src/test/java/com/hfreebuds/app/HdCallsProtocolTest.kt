@@ -6,8 +6,8 @@ import org.junit.Test
 
 class HdCallsProtocolTest {
     @Test fun writesMatchCapturedFreeBuds5Commands() {
-        assertEquals("5a0006002b450101007009", HdCallsProtocol.set(false).toBytes().hex())
-        assertEquals("5a0006002b450101016028", HdCallsProtocol.set(true).toBytes().hex())
+        assertEquals("5A0006002B450101007009", HdCallsProtocol.set(false).toBytes().hex())
+        assertEquals("5A0006002B450101016028", HdCallsProtocol.set(true).toBytes().hex())
     }
 
     @Test fun parsesCapturedOnAndOffReports() {

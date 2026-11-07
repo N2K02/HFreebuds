@@ -5,10 +5,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ConnectionUiPolicyTest {
-    @Test fun disconnectedTilesOnlyAllowFindAndAbout() {
+    @Test fun disconnectedTilesAllowFindAboutAndUpdates() {
         assertTrue(tileAvailable(Page.FIND, false))
         assertTrue(tileAvailable(Page.ABOUT, false))
-        for (page in listOf(Page.SETTINGS, Page.LANGUAGE, Page.UPDATES, Page.SOUND, Page.GESTURES, Page.WEAR)) {
+        assertTrue(tileAvailable(Page.UPDATES, false))
+        for (page in listOf(Page.SETTINGS, Page.LANGUAGE, Page.SOUND, Page.GESTURES, Page.WEAR)) {
             assertFalse("Unexpectedly enabled while disconnected: $page", tileAvailable(page, false))
         }
     }

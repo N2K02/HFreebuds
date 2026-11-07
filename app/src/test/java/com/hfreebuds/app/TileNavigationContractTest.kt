@@ -21,9 +21,10 @@ class TileNavigationContractTest {
         assertFalse("HFreebuds must not have bottom navigation", screen.contains("NavigationBar {"))
         assertFalse("HFreebuds must not have bottom navigation items", screen.contains("NavigationBarItem("))
         assertTrue("Shortcut tiles must be shown in a two-column grid", home.contains("tiles.chunked(2)"))
-        for (label in listOf("Find Device", "Phone audio", "Updates", "About")) {
+        for (label in listOf("Find Device", "Updates", "About")) {
             assertTrue("Missing shortcut tile: $label", home.contains("\"$label\""))
         }
+        assertFalse("Phone audio should not appear on Home", home.contains("\"Phone audio\""))
         assertTrue("Missing Earbud settings shortcut", home.contains("\"Earbud settings\""))
         assertTrue("Permission gate must retain direct update access", home.contains("Tile(\"About & updates\""))
     }

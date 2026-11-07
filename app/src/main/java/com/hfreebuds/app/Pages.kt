@@ -412,6 +412,7 @@ internal fun EarbudSettingsPage(
     openDual: () -> Unit,
 ) {
     val s by Earbuds.state.collectAsState()
+    val context = LocalContext.current
     PageScaffold("Earbud settings", onBack) {
         if (s.dualEnabled != null) {
             item { GroupLabel("Connect preference") }
@@ -471,6 +472,23 @@ internal fun EarbudSettingsPage(
                 }
             }
             item { Note("Enhances voice call clarity. Results depend on the devices and network; battery use may increase.", Modifier.padding(horizontal = 12.dp)) }
+        }
+        item { GroupLabel("Audio test") }
+        item {
+            Panel {
+                Text("Left / right audio test", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Note("Play a short sound in each earbud to check the channels.")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { FindTone.play(context, FindTone.Side.LEFT, seconds = 2, rising = false) },
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Test left") }
+                    OutlinedButton(
+                        onClick = { FindTone.play(context, FindTone.Side.RIGHT, seconds = 2, rising = false) },
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Test right") }
+                }
+            }
         }
         if (s.hdAudio == null && s.lowLatency == null && s.dualEnabled == null && s.profile != DeviceProfile.FREEBUDS_5) {
             item { Panel { Text("These earbuds don't report any of these settings (or aren't connected).") } }

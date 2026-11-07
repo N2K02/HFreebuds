@@ -102,6 +102,8 @@ object Earbuds {
     private val waiting = ConcurrentHashMap<Int, CompletableDeferred<HuaweiPacket>>()
     private val dualRows = ConcurrentHashMap<Int, DualDevice>()
     private var dualCount = 0
+    private val voiceLanguageLock = Any()
+    private var englishVoiceRequestSocket: BluetoothSocket? = null
     private lateinit var app: Context
 
     fun init(context: Context) {
@@ -197,6 +199,7 @@ object Earbuds {
     }
 
     fun disconnect() {
+        synchronized(voiceLanguageLock) { englishVoiceRequestSocket = null }
         connectJob?.cancel()
         readerJob?.cancel()
         runCatching { connectingSocket?.close() }
@@ -232,6 +235,7 @@ object Earbuds {
             log("Link closed: ${e.message}")
         }
         if (socket === sock) {
+            synchronized(voiceLanguageLock) { if (englishVoiceRequestSocket === sock) englishVoiceRequestSocket = null }
             socket = null
             _state.update { it.copy(link = Link.DISCONNECTED, hdCalls = null, hdCallsPending = false, error = "The earbuds disconnected.") }
         }
@@ -375,6 +379,7 @@ object Earbuds {
             Cmd.LANGUAGE_READ -> p.params[3]?.takeIf { it.size > 1 }?.let { v ->
                 val list = String(v, Charsets.UTF_8).split(',').map { it.trim() }.filter { it.isNotEmpty() }
                 _state.update { it.copy(languages = list) }
+                applyDefaultEnglish(list)
             }
             Cmd.DUAL_READ -> p.byte(1)?.let { v -> _state.update { it.copy(dualEnabled = v == 1) } }
             Cmd.DUAL_LIST -> {
@@ -484,6 +489,25 @@ object Earbuds {
     fun setSwipe(action: Int) {
         _state.update { it.copy(swipe = action) }
         write(HuaweiPacket.write(Cmd.SWIPE_WRITE, 1 to action, 2 to action)) { read(Cmd.SWIPE_READ, 1, 2) }
+    }
+
+    /** Request English once per connection, only when the earbuds advertise it. */
+    private fun applyDefaultEnglish(languages: List<String>) {
+        val locale = chooseEnglishVoiceLanguage(languages) ?: return
+        val activeSocket = socket ?: return
+        synchronized(voiceLanguageLock) {
+            if (englishVoiceRequestSocket === activeSocket) return
+            englishVoiceRequestSocket = activeSocket
+        }
+        scope.launch {
+            val sent = if (socket === activeSocket && _state.value.link == Link.CONNECTED) {
+                send(HuaweiPacket.write(Cmd.LANGUAGE_WRITE, 1 to locale, 2 to 1))
+            } else false
+            if (!sent) synchronized(voiceLanguageLock) {
+                if (englishVoiceRequestSocket === activeSocket) englishVoiceRequestSocket = null
+            }
+            if (sent) log("Requested English voice prompts")
+        }
     }
 
     fun setLanguage(locale: String) = write(HuaweiPacket.write(Cmd.LANGUAGE_WRITE, 1 to locale, 2 to 1))

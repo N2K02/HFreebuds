@@ -455,21 +455,17 @@ internal fun EarbudSettingsPage(
         }
         if (s.profile == DeviceProfile.FREEBUDS_5 && s.link == Link.CONNECTED) {
             item { GroupLabel("Calls") }
-            if (s.hdCallsPending) {
-                item { Panel { Text("Updating HD calls…") } }
-            } else if (s.hdCalls != null) {
-                item { SwitchItem(0, 1, "HD calls", null, s.hdCalls == true) { Earbuds.setHdCalls(it) } }
-            } else {
-                item {
-                    Panel {
-                        Text("HD calls", style = MaterialTheme.typography.titleMedium)
-                        Note("Current status is unknown. Choose an option to set it and confirm the earbuds' response.")
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilledTonalButton(onClick = { Earbuds.setHdCalls(false) }) { Text("Off") }
-                            FilledTonalButton(onClick = { Earbuds.setHdCalls(true) }) { Text("On") }
-                        }
-                    }
-                }
+            item {
+                SwitchItem(
+                    0, 1, "HD calls",
+                    when {
+                        s.hdCallsPending -> "Updating…"
+                        s.hdCalls == null -> "Status unknown — tap to enable"
+                        else -> null
+                    },
+                    checked = s.hdCalls == true,
+                    enabled = !s.hdCallsPending,
+                ) { Earbuds.setHdCalls(it) }
             }
             item { Note("Enhances voice call clarity. Results depend on the devices and network; battery use may increase.", Modifier.padding(horizontal = 12.dp)) }
         }

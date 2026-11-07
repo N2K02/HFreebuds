@@ -282,7 +282,6 @@ private fun HomePage(
                     add(Triple("Earbud settings", Icons.Rounded.Tune, Page.SETTINGS))
                 }
                 if (connected && s.languages != null) add(Triple("Voice prompts", Icons.Rounded.Language, Page.LANGUAGE))
-                add(Triple("Phone audio", Icons.Rounded.VolumeUp, Page.PHONE))
                 add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
                 add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
             }

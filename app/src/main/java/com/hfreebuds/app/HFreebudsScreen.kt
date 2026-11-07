@@ -310,7 +310,6 @@ private fun HomePage(
             val tiles = buildList {
                 add(Triple("Find Device", Icons.Rounded.LocationOn, Page.FIND))
                 add(Triple("Earbud settings", Icons.Rounded.Tune, Page.SETTINGS))
-                if (s.languages != null || s.profile?.language == true) add(Triple("Voice prompts", Icons.Rounded.Language, Page.LANGUAGE))
                 add(Triple("Updates", Icons.Rounded.SystemUpdate, Page.UPDATES))
                 add(Triple("About", Icons.Rounded.Info, Page.ABOUT))
             }

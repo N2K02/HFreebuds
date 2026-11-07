@@ -25,6 +25,7 @@ class TileNavigationContractTest {
             assertTrue("Missing shortcut tile: $label", home.contains("\"$label\""))
         }
         assertFalse("Phone audio should not appear on Home", home.contains("\"Phone audio\""))
+        assertFalse("Voice prompts should not appear on Home", home.contains("\"Voice prompts\""))
         assertTrue("Missing Earbud settings shortcut", home.contains("\"Earbud settings\""))
         assertTrue("Permission gate must retain direct update access", home.contains("Tile(\"About & updates\""))
     }

@@ -118,9 +118,9 @@ internal enum class Page {
     HOME, GESTURES, SOUND, WEAR, SETTINGS, FIND, DUAL, LANGUAGE, PHONE, ABOUT , UPDATES
 }
 
-/** Home, About and Find Device remain accessible; other controls need a live link. */
+/** Home, About, Updates and Find Device remain accessible without a device link. */
 internal fun tileAvailable(page: Page, connected: Boolean): Boolean =
-    connected || page == Page.ABOUT || page == Page.FIND || page == Page.HOME
+    connected || page == Page.ABOUT || page == Page.FIND || page == Page.HOME || page == Page.UPDATES
 
 internal fun devicePageNeedsConnection(page: Page): Boolean = when (page) {
     Page.GESTURES, Page.SOUND, Page.WEAR, Page.SETTINGS, Page.FIND, Page.DUAL, Page.LANGUAGE, Page.PHONE -> true

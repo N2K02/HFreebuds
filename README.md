@@ -8,7 +8,7 @@ Control your **HUAWEI FreeBuds** from any Android phone, without HUAWEI AI Life.
 
 ## Layout
 
-Laid out like the official app, in Material 3 Expressive: a home screen with **Sound** (noise control, sound effects), **Interactions** (gesture control with Double-tap / Triple-tap / Press & hold / Swipe tabs), **Ear fit** (wear detection) and **More** (Find Device, Earbud settings, Voice prompts, Updates, About, Connection log). Each opens its own screen.
+Laid out like the official app, in Material 3 Expressive: a home screen with **Sound** (noise control, sound effects), **Interactions** (gesture control with Double-tap / Triple-tap / Press & hold / Swipe tabs), **Ear fit** (wear detection) and **More** (Find Device, Earbud settings, Updates, About, Connection log). Each opens its own screen.
 
 ## Features
 
@@ -21,7 +21,7 @@ Laid out like the official app, in Material 3 Expressive: a home screen with **S
 | **Gestures** | Double-tap, triple-tap, press and hold (and which noise modes it cycles), swipe: each **left and right** separately, plus during calls |
 | **Wear detection** | Pause music when you take an earbud out |
 | **Dual-device connection** | On/off, see the connected phones/computers, set the preferred one, connect, disconnect, forget |
-| **Voice prompts language** | Choose from the languages the earbuds offer |
+| **Voice prompts language** | Requests English when supported by the earbuds |
 | **Find my earbuds** | A loud chirp on the left, right or both earbuds, getting louder |
 | **Audio test** | Play a short test sound for the left or right earbud from Earbud settings |
 | **About** | Model, firmware, hardware version, serial numbers (each earbud) |

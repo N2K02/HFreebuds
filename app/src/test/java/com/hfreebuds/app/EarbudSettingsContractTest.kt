@@ -32,4 +32,13 @@ class EarbudSettingsContractTest {
         assertTrue(page.contains("Earbuds.setHdAudio(false)"))
         assertTrue(page.contains("Earbuds.setHdAudio(true)"))
     }
+    @Test fun hdCallsAndChannelTestsAreAvailableInSettings() {
+        val page = settings()
+        assertTrue(page.contains("\"HD calls\""))
+        assertTrue(page.contains("Earbuds.setHdCalls(true)"))
+        assertTrue(page.contains("Earbuds.setHdCalls(false)"))
+        assertTrue(page.contains("FindTone.Side.LEFT"))
+        assertTrue(page.contains("FindTone.Side.RIGHT"))
+    }
+
 }

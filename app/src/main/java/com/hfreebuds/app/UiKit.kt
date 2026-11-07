@@ -42,6 +42,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -174,15 +175,15 @@ fun Untested(s: EarbudsState, feature: String) {
 @Composable
 fun Segment(
     index: Int, count: Int, modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null, role: Role? = null,
+    onClick: (() -> Unit)? = null, role: Role? = null, enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val base = Modifier.fillMaxWidth().clip(groupShape(index, count))
-    val m = if (onClick != null) base.clickable(role = role, onClick = onClick) else base
+    val m = if (onClick != null) base.clickable(enabled = enabled, role = role, onClick = onClick) else base
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = groupShape(index, count),
-        modifier = modifier.then(m),
+        modifier = modifier.alpha(if (enabled) 1f else 0.38f).then(m),
     ) { content() }
 }
 
@@ -190,9 +191,9 @@ fun Segment(
 @Composable
 fun NavRow(
     index: Int, count: Int, title: String, value: String? = null, subtitle: String? = null,
-    icon: ImageVector? = null, onClick: () -> Unit,
+    icon: ImageVector? = null, enabled: Boolean = true, onClick: () -> Unit,
 ) {
-    Segment(index, count, onClick = onClick, role = Role.Button) {
+    Segment(index, count, onClick = onClick, role = Role.Button, enabled = enabled) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp).heightIn(min = 32.dp),
@@ -216,8 +217,8 @@ fun NavRow(
 }
 
 @Composable
-fun SwitchItem(index: Int, count: Int, title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Segment(index, count, onClick = { onChange(!checked) }, role = Role.Switch) {
+fun SwitchItem(index: Int, count: Int, title: String, subtitle: String?, checked: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+    Segment(index, count, onClick = { onChange(!checked) }, role = Role.Switch, enabled = enabled) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
@@ -226,7 +227,7 @@ fun SwitchItem(index: Int, count: Int, title: String, subtitle: String?, checked
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 subtitle?.let { Note(it) }
             }
-            Switch(checked = checked, onCheckedChange = null)
+            Switch(checked = checked, onCheckedChange = null, enabled = enabled)
         }
     }
 }
@@ -259,11 +260,11 @@ fun IconBadge(icon: ImageVector, modifier: Modifier = Modifier, size: Int = 40) 
 
 /** A square-ish tile for the "More" grid. */
 @Composable
-fun Tile(title: String, icon: ImageVector, modifier: Modifier = Modifier, subtitle: String? = null, updateStatus: dev.n2k02.updater.UpdateStatus? = null, onClick: () -> Unit) {
+fun Tile(title: String, icon: ImageVector, modifier: Modifier = Modifier, subtitle: String? = null, updateStatus: dev.n2k02.updater.UpdateStatus? = null, enabled: Boolean = true, onClick: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(28.dp),
-        modifier = modifier.clip(RoundedCornerShape(28.dp)).clickable(role = Role.Button, onClick = onClick),
+        modifier = modifier.alpha(if (enabled) 1f else 0.38f).clip(RoundedCornerShape(28.dp)).clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

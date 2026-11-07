@@ -410,35 +410,10 @@ fun WearPage(onBack: () -> Unit) {
 internal fun EarbudSettingsPage(
     onBack: () -> Unit,
     openDual: () -> Unit,
-    openUpdates: () -> Unit,
-    openSubpage: (Page) -> Unit,
 ) {
     val s by Earbuds.state.collectAsState()
-    val updaterState by LiveUpdater.controller.status.collectAsState()
-    PageScaffold("Settings", onBack) {
-        item { GroupLabel("Preferences and tools") }
-        listOf(
-            Triple("Gesture control", Icons.Rounded.TouchApp, Page.GESTURES),
-            Triple("Sound effects", Icons.Rounded.GraphicEq, Page.SOUND),
-            Triple("Wear detection", Icons.Rounded.Hearing, Page.WEAR),
-            Triple("Find Device", Icons.Rounded.LocationSearching, Page.FIND),
-            Triple("Connected devices", Icons.Rounded.Bluetooth, Page.DUAL),
-            Triple("Voice prompts language", Icons.Rounded.Language, Page.LANGUAGE),
-            Triple("Phone audio", Icons.Rounded.Headphones, Page.PHONE),
-            Triple("About", Icons.Rounded.Info, Page.ABOUT),
-        ).forEach { (label, icon, destination) ->
-            item {
-                NavRow(0, 1, label, icon = icon) { openSubpage(destination) }
-            }
-        }
-        item {
-            Tile(
-                "About & updates",
-                Icons.Rounded.SystemUpdate,
-                Modifier.fillMaxWidth(),
-                updateStatus = updaterState,
-            ) { openUpdates() }
-        }
+    val context = LocalContext.current
+    PageScaffold("Earbud settings", onBack) {
         if (s.dualEnabled != null) {
             item { GroupLabel("Connect preference") }
             item {
@@ -456,7 +431,7 @@ internal fun EarbudSettingsPage(
             item { Untested(s, "dual") }
         }
         if (s.hdAudio != null) {
-            item { GroupLabel("Sound quality") }
+            item { GroupLabel("Sound quality / HD audio") }
             item {
                 RadioItem(0, 2, "Prioritize connection quality", "Balance connection stability with sound quality.", s.hdAudio == false) {
                     Earbuds.setHdAudio(false)
@@ -478,7 +453,40 @@ internal fun EarbudSettingsPage(
                 )
             }
         }
-        if (s.hdAudio == null && s.lowLatency == null && s.dualEnabled == null) {
+        if (s.profile == DeviceProfile.FREEBUDS_5 && s.link == Link.CONNECTED) {
+            item { GroupLabel("Calls") }
+            item {
+                SwitchItem(
+                    0, 1, "HD calls",
+                    when {
+                        s.hdCallsPending -> "Updating…"
+                        s.hdCalls == null -> "Status unknown — tap to enable"
+                        else -> null
+                    },
+                    checked = s.hdCalls == true,
+                    enabled = !s.hdCallsPending,
+                ) { Earbuds.setHdCalls(it) }
+            }
+            item { Note("Enhances voice call clarity. Results depend on the devices and network; battery use may increase.", Modifier.padding(horizontal = 12.dp)) }
+        }
+        item { GroupLabel("Audio test") }
+        item {
+            Panel {
+                Text("Left / right audio test", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Note("Play a short sound in each earbud to check the channels.")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { FindTone.play(context, FindTone.Side.LEFT, seconds = 2, rising = false) },
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Test left") }
+                    OutlinedButton(
+                        onClick = { FindTone.play(context, FindTone.Side.RIGHT, seconds = 2, rising = false) },
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Test right") }
+                }
+            }
+        }
+        if (s.hdAudio == null && s.lowLatency == null && s.dualEnabled == null && s.profile != DeviceProfile.FREEBUDS_5) {
             item { Panel { Text("These earbuds don't report any of these settings (or aren't connected).") } }
         }
     }

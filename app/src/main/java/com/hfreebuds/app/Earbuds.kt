@@ -63,6 +63,8 @@ data class EarbudsState(
     val autoPause: Boolean? = null,
     /** true = sound quality first (HD / LDAC), false = connection first. */
     val hdAudio: Boolean? = null,
+    val hdCalls: Boolean? = null,
+    val hdCallsPending: Boolean = false,
     val lowLatency: Boolean? = null,
     val eqPreset: Int? = null,
     val eqAvailable: List<Int>? = null,
@@ -77,6 +79,7 @@ data class EarbudsState(
     val dualEnabled: Boolean? = null,
     val dualDevices: List<DualDevice>? = null,
     val info: DeviceInfo? = null,
+    val productIdentity: ProductIdentity? = null,
 )
 
 /**
@@ -99,6 +102,8 @@ object Earbuds {
     private val waiting = ConcurrentHashMap<Int, CompletableDeferred<HuaweiPacket>>()
     private val dualRows = ConcurrentHashMap<Int, DualDevice>()
     private var dualCount = 0
+    private val voiceLanguageLock = Any()
+    private var englishVoiceRequestSocket: BluetoothSocket? = null
     private lateinit var app: Context
 
     fun init(context: Context) {
@@ -194,6 +199,7 @@ object Earbuds {
     }
 
     fun disconnect() {
+        synchronized(voiceLanguageLock) { englishVoiceRequestSocket = null }
         connectJob?.cancel()
         readerJob?.cancel()
         runCatching { connectingSocket?.close() }
@@ -203,7 +209,7 @@ object Earbuds {
         waiting.values.forEach { it.cancel() }
         waiting.clear()
         if (_state.value.link != Link.DISCONNECTED) {
-            _state.update { it.copy(link = Link.DISCONNECTED) }
+            _state.update { it.copy(link = Link.DISCONNECTED, hdCalls = null, hdCallsPending = false) }
             log("Disconnected")
         }
     }
@@ -229,8 +235,9 @@ object Earbuds {
             log("Link closed: ${e.message}")
         }
         if (socket === sock) {
+            synchronized(voiceLanguageLock) { if (englishVoiceRequestSocket === sock) englishVoiceRequestSocket = null }
             socket = null
-            _state.update { it.copy(link = Link.DISCONNECTED, error = "The earbuds disconnected.") }
+            _state.update { it.copy(link = Link.DISCONNECTED, hdCalls = null, hdCallsPending = false, error = "The earbuds disconnected.") }
         }
     }
 
@@ -342,6 +349,7 @@ object Earbuds {
             }
             Cmd.AUTO_PAUSE_READ -> p.byte(1)?.let { v -> _state.update { it.copy(autoPause = v == 1) } }
             Cmd.QUALITY_READ -> p.byte(2)?.let { v -> _state.update { it.copy(hdAudio = v == 1) } }
+            Cmd.HD_CALLS_REPORT -> HdCallsProtocol.reported(p)?.let { value -> _state.update { it.copy(hdCalls = value) } }
             Cmd.LOW_LATENCY -> p.byte(2)?.let { v -> _state.update { it.copy(lowLatency = v == 1) } }
             Cmd.EQ_READ -> _state.update { s ->
                 s.copy(
@@ -371,6 +379,7 @@ object Earbuds {
             Cmd.LANGUAGE_READ -> p.params[3]?.takeIf { it.size > 1 }?.let { v ->
                 val list = String(v, Charsets.UTF_8).split(',').map { it.trim() }.filter { it.isNotEmpty() }
                 _state.update { it.copy(languages = list) }
+                applyDefaultEnglish(list)
             }
             Cmd.DUAL_READ -> p.byte(1)?.let { v -> _state.update { it.copy(dualEnabled = v == 1) } }
             Cmd.DUAL_LIST -> {
@@ -398,6 +407,7 @@ object Earbuds {
                 }
                 _state.update {
                     it.copy(
+                        productIdentity = ProductIdentity.fromPacket(p),
                         info = DeviceInfo(
                             model = str(15), subModel = str(10), hardware = str(3), firmware = str(7),
                             serial = str(9), leftSerial = ls, rightSerial = rs,
@@ -432,6 +442,22 @@ object Earbuds {
         write(HuaweiPacket.write(Cmd.AUTO_PAUSE_WRITE, 1 to on)) { read(Cmd.AUTO_PAUSE_READ, 1) }
     }
 
+    /** No startup query was observed; only the earbud's 2B46 report confirms the state. */
+    fun setHdCalls(enabled: Boolean) {
+        val before = _state.value
+        if (before.link != Link.CONNECTED || before.profile != DeviceProfile.FREEBUDS_5 || before.hdCallsPending) return
+        _state.update { it.copy(hdCalls = null, hdCallsPending = true) }
+        scope.launch {
+            try {
+                request(HdCallsProtocol.set(enabled), answer = Cmd.HD_CALLS_REPORT)
+            } finally {
+                _state.update { current ->
+                    if (current.address == before.address) current.copy(hdCallsPending = false) else current
+                }
+            }
+        }
+    }
+
     fun setHdAudio(on: Boolean) {
         _state.update { it.copy(hdAudio = on) }
         write(HuaweiPacket.write(Cmd.QUALITY_WRITE, 1 to on)) { read(Cmd.QUALITY_READ, 1) }
@@ -463,6 +489,25 @@ object Earbuds {
     fun setSwipe(action: Int) {
         _state.update { it.copy(swipe = action) }
         write(HuaweiPacket.write(Cmd.SWIPE_WRITE, 1 to action, 2 to action)) { read(Cmd.SWIPE_READ, 1, 2) }
+    }
+
+    /** Request English once per connection, only when the earbuds advertise it. */
+    private fun applyDefaultEnglish(languages: List<String>) {
+        val locale = chooseEnglishVoiceLanguage(languages) ?: return
+        val activeSocket = socket ?: return
+        synchronized(voiceLanguageLock) {
+            if (englishVoiceRequestSocket === activeSocket) return
+            englishVoiceRequestSocket = activeSocket
+        }
+        scope.launch {
+            val sent = if (socket === activeSocket && _state.value.link == Link.CONNECTED) {
+                send(HuaweiPacket.write(Cmd.LANGUAGE_WRITE, 1 to locale, 2 to 1))
+            } else false
+            if (!sent) synchronized(voiceLanguageLock) {
+                if (englishVoiceRequestSocket === activeSocket) englishVoiceRequestSocket = null
+            }
+            if (sent) log("Requested English voice prompts")
+        }
     }
 
     fun setLanguage(locale: String) = write(HuaweiPacket.write(Cmd.LANGUAGE_WRITE, 1 to locale, 2 to 1))

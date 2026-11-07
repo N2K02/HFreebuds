@@ -8,21 +8,22 @@ Control your **HUAWEI FreeBuds** from any Android phone, without HUAWEI AI Life.
 
 ## Layout
 
-Laid out like the official app, in Material 3 Expressive: a home screen with **Sound** (noise control, sound effects), **Interactions** (gesture control with Double-tap / Triple-tap / Press & hold / Swipe tabs), **Ear fit** (wear detection) and **More** (Find Device, Earbud settings, Voice prompts, Phone audio, Updates, About, Connection log). Each opens its own screen.
+Laid out like the official app, in Material 3 Expressive: a home screen with **Sound** (noise control, sound effects), **Interactions** (gesture control with Double-tap / Triple-tap / Press & hold / Swipe tabs), **Ear fit** (wear detection) and **More** (Find Device, Earbud settings, Updates, About, Connection log). Each opens its own screen.
 
 ## Features
 
 | | |
 | --- | --- |
 | **Battery** | Left, right and case, with charging status; whether the earbuds are in your ears |
+| **Product image** | Retrieves and caches Huawei's model and colour image when the connected earbuds report a verified identity; otherwise a generic illustration is shown |
 | **Noise control** | Off / Noise cancelling / Awareness (models that have it), with strength levels: Smart, Light, Balanced (and Deep where available) |
 | **Sound** | Equalizer presets (Default, Bass boost, Treble boost, Voices), **HD audio** (sound quality first, LDAC) or connection first, **Low latency** |
 | **Gestures** | Double-tap, triple-tap, press and hold (and which noise modes it cycles), swipe: each **left and right** separately, plus during calls |
 | **Wear detection** | Pause music when you take an earbud out |
 | **Dual-device connection** | On/off, see the connected phones/computers, set the preferred one, connect, disconnect, forget |
-| **Voice prompts language** | Choose from the languages the earbuds offer |
+| **Voice prompts language** | Requests English when supported by the earbuds |
 | **Find my earbuds** | A loud chirp on the left, right or both earbuds, getting louder |
-| **Phone audio** | Shows the Bluetooth codec in use (LDAC, AAC, SBC…), sample rate, bit depth and LDAC quality; shortcuts to the codec setting and the left/right balance setting, with left/right test tones |
+| **Audio test** | Play a short test sound for the left or right earbud from Earbud settings |
 | **About** | Model, firmware, hardware version, serial numbers (each earbud) |
 | **Quick Settings tiles** | "Noise control": tap to cycle Off → Noise cancelling (→ Awareness) without opening the app. "Earbuds battery": the last left / right / case reading; tap to check again |
 | **Reconnects by itself** | While the app is open, it reconnects as soon as your earbuds come back (e.g. out of the case) |
@@ -38,7 +39,7 @@ Each model has a profile of what it supports. Every section also only appears wh
 
 ### What Android doesn't allow
 
-- **Changing the Bluetooth codec** from an app: only the system can. HFreebuds shows the active codec and opens Developer options → Bluetooth audio codec / LDAC playback quality. Turn on HD audio in HFreebuds first so the earbuds offer LDAC.
+- **Changing the Bluetooth codec** from an app: only the system can. Use Android Developer options → Bluetooth audio codec / LDAC playback quality. Turn on HD audio in HFreebuds first so the earbuds offer LDAC.
 - **Left/right balance** for all sound: set in Accessibility → Audio adjustment (HFreebuds opens it and has test tones).
 - **Making the earbuds beep by themselves**: no Huawei command for it is known, so Find my earbuds plays the chirp through the phone; the earbuds need to be connected.
 

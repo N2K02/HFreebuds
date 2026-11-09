@@ -9,7 +9,7 @@ trap 'rm -rf "$tmp"' EXIT
 cat > "$tmp/gh" <<'FAKE_GH'
 #!/usr/bin/env bash
 set -euo pipefail
-[[ "$*" == 'api --paginate repos/N2K02/Hfreebuds/git/matching-refs/tags/v --jq .[].ref' ]] || exit 4
+[[ "$*" == 'api --paginate repos/N2K02/HFreebuds/git/matching-refs/tags/v --jq .[].ref' ]] || exit 4
 [[ "${SIMULATE_API_FAILURE:-0}" != "1" ]] || exit 5
 cat "$PUBLIC_REFS_FIXTURE"
 FAKE_GH

@@ -10,7 +10,7 @@ if [[ ! "$slug" =~ ^[a-z0-9]+$ ]]; then
   exit 1
 fi
 
-repo="${GITHUB_REPOSITORY:-N2K02/Hfreebuds}"
+repo="${GITHUB_REPOSITORY:-N2K02/HFreebuds}"
 refs=$(gh api --paginate "repos/$repo/git/matching-refs/tags/v" --jq '.[].ref') || {
   echo "::error::Unable to verify public $slug release tags; refusing to guess a version." >&2
   exit 1

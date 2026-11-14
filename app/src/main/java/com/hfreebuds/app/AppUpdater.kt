@@ -216,57 +216,47 @@ object AppUpdater {
 
     // ---------------------------------------------------------------- GitHub
 
-    private suspend fun latestRelease(): Release? = runCatching { publicStableRelease() }.getOrNull() ?: legacyLatestRelease()
+    private suspend fun latestRelease(): Release? = legacyLatestRelease()
 
-    /** Public manifest remains accessible after the source repository becomes private. */
-    private suspend fun publicStableRelease(): Release? = withContext(Dispatchers.IO) {
-        val connection = URL("https://n2k02.github.io/hfreebuds/updates/stable.json").openConnection() as HttpURLConnection
+    /** Read existing experimental APKs from public GitHub Releases, not website manifests. */
+    private suspend fun experimentalRelease(): Release? = withContext(Dispatchers.IO) {
+        val connection = URL("https://api.github.com/repos/$repo/releases?per_page=100")
+            .openConnection() as HttpURLConnection
         try {
             connection.connectTimeout = 10_000
             connection.readTimeout = 15_000
+            connection.setRequestProperty("Accept", "application/vnd.github+json")
+            connection.setRequestProperty("User-Agent", "$appName-updater (Android)")
             if (connection.responseCode == 404) return@withContext null
-            if (connection.responseCode != 200) throw IOException("Manifest HTTP ${connection.responseCode}")
-            val data = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-            val digest = data.optString("sha256").lowercase()
-            val apkUrl = data.optString("apkUrl")
-            val code = data.optLong("versionCode")
-            if (code <= 0 || !apkUrl.startsWith("https://") || !Regex("[a-f0-9]{64}").matches(digest)) return@withContext null
-            val notesJson = data.optJSONArray("notes")
-            val notes = if (notesJson == null) emptyList() else (0 until notesJson.length()).map { notesJson.optString(it) }
-            Release(
-                tag = data.optString("tag"),
-                versionName = data.optString("versionName"),
-                versionCode = code,
-                notes = notes,
-                apkUrl = apkUrl,
-                apkName = data.optString("apkName"),
-                apkSize = data.optLong("apkSize"),
-                sha256 = digest,
-                pageUrl = data.optString("pageUrl").ifBlank { "https://n2k02.github.io/hfreebuds/" },
-            )
-        } finally {
-            connection.disconnect()
-        }
-    }
-
-    private suspend fun experimentalRelease(): Release? = withContext(Dispatchers.IO) {
-        val c = URL("https://n2k02.github.io/hfreebuds/updates/experimental.json").openConnection() as HttpURLConnection
-        try {
-            c.connectTimeout = 10_000
-            c.readTimeout = 15_000
-            if (c.responseCode == 404) return@withContext null
-            if (c.responseCode != 200) throw IOException("Experimental manifest HTTP ${c.responseCode}")
-            val o = JSONObject(c.inputStream.bufferedReader().use { it.readText() })
-            if (o.optString("channel") != "experimental") return@withContext null
-            val url = o.optString("apkUrl")
-            val sha = o.optString("sha256").lowercase()
-            if (o.optLong("versionCode") <= 0 || !url.startsWith("https://github.com/") ||
-                !Regex("[a-f0-9]{64}").matches(sha)) return@withContext null
-            val array = o.optJSONArray("notes")
-            Release(o.optString("tag"), o.optString("versionName"), o.optLong("versionCode"),
-                if (array == null) emptyList() else (0 until array.length()).map { array.optString(it) },
-                url, o.optString("apkName"), o.optLong("apkSize"), sha, o.optString("pageUrl"))
-        } finally { c.disconnect() }
+            if (connection.responseCode != 200) throw IOException("Releases HTTP ${connection.responseCode}")
+            val releases = org.json.JSONArray(connection.inputStream.bufferedReader().use { it.readText() })
+            (0 until releases.length()).mapNotNull { index ->
+                val release = releases.optJSONObject(index) ?: return@mapNotNull null
+                if (release.optBoolean("draft") || !release.optBoolean("prerelease")) return@mapNotNull null
+                val tag = release.optString("tag_name")
+                val run = Regex("""^experimental-pr-\\d+-run-(\\d+)$""")
+                    .matchEntire(tag)?.groupValues?.get(1)?.toLongOrNull()
+                    ?: return@mapNotNull null
+                val code = 100_000L + run
+                val assets = release.optJSONArray("assets") ?: return@mapNotNull null
+                val apk = (0 until assets.length()).mapNotNull { assets.optJSONObject(it) }
+                    .firstOrNull { it.optString("name").endsWith(".apk", true) &&
+                        it.optString("browser_download_url").startsWith("https://github.com/") }
+                    ?: return@mapNotNull null
+                Release(
+                    tag = tag,
+                    versionName = tag,
+                    versionCode = code,
+                    notes = whatsNew(release.optString("body")),
+                    apkUrl = apk.optString("browser_download_url"),
+                    apkName = apk.optString("name"),
+                    apkSize = apk.optLong("size"),
+                    sha256 = apk.optString("digest").takeIf { it.startsWith("sha256:") }
+                        ?.removePrefix("sha256:")?.lowercase(),
+                    pageUrl = release.optString("html_url"),
+                )
+            }.maxByOrNull { it.versionCode }
+        } finally { connection.disconnect() }
     }
 
     private suspend fun legacyLatestRelease(): Release? = withContext(Dispatchers.IO) {

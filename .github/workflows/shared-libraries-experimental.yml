@@ -26,3 +26,4 @@ jobs:
         with:
           name: HFreebuds-experimental-shared-libraries
           path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7
